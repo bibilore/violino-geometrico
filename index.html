@@ -25,18 +25,18 @@
   #btn-nuovo-teorema { background: #27ae60; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
   #btn-nuovo-teorema:hover { background: #219653; }
   .footer-copyright { font-size: 0.75em; color: #7f8c8d; text-align: center; margin-top: 15px; border-top: 1px solid #ecf0f1; padding-top: 10px; }
-  #pannello-destro { width: 65%; display: flex; flex-direction: column; padding: 15px 20px; align-items: center; overflow-y: auto; }
-  h2.titolo-app { margin: 0 0 10px 0; color: #2c3e50; font-size: 1.3em; align-self: flex-start; }
+  #pannello-destro { width: 65%; display: flex; flex-direction: column; padding: 10px 20px; align-items: center; overflow-y: auto; }
+  h2.titolo-app { margin: 0 0 5px 0; color: #2c3e50; font-size: 1.2em; align-self: flex-start; }
   canvas { background: #111; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); max-width: 100%; height: auto; cursor: pointer; }
-  #riquadro-enunciato { margin-top: 8px; padding: 10px 12px; background: #fff; border-left: 5px solid #ccc; width: 90%; min-height: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 0.85em; user-select: text; }
-  #pannello-compositore { margin-top: 10px; background: #ffffff; padding: 12px 15px; border-radius: 8px; width: 90%; box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; }
+  #riquadro-enunciato { margin-top: 6px; padding: 8px 12px; background: #fff; border-left: 5px solid #ccc; width: 90%; min-height: 35px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 0.8em; user-select: text; }
+  #pannello-compositore { margin-top: 8px; background: #ffffff; padding: 10px 15px; border-radius: 8px; width: 90%; box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; }
   .compositore-campi { display: flex; gap: 10px; }
-  .compositore-campi input { padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85em; box-sizing: border-box; width: 100%; }
+  .compositore-campi input { padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.8em; box-sizing: border-box; width: 100%; }
   #canvasPentagrammaCompositore { background: #fafafa; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; align-self: center; }
   .controlli-sequenziatore { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; align-items: center; }
   .btn-seq { padding: 5px 8px; border: none; border-radius: 4px; background: #3498db; color: white; font-size: 0.75em; cursor: pointer; font-weight: bold; }
   .btn-seq:hover { background: #2980b9; }
-  #pannello-modifica-nota { background: #f8f9fa; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; display: none; align-items: center; gap: 6px; font-size: 0.75em; }
+  #pannello-modifica-nota { background: #f8f9fa; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 6px; display: none; align-items: center; gap: 6px; font-size: 0.75em; }
 </style>
 </head>
 <body>
@@ -52,11 +52,11 @@
 
 <div id="pannello-destro">
   <h2 class="titolo-app">🎻 Violino Geometrico — di Bianca Lorenzini</h2>
-  <canvas id="canvasViolino" width="950" height="260"></canvas>
+  <canvas id="canvasViolino" width="950" height="240"></canvas>
   <div id="riquadro-enunciato"><strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.</div>
 
   <div id="pannello-compositore">
-    <h3 id="titolo-pannello-compositore" style="margin:0; font-size:1em; color:#2c3e50;">Spartito e Composizione Teoremi</h3>
+    <h3 id="titolo-pannello-compositore" style="margin:0; font-size:0.95em; color:#2c3e50;">Spartito e Composizione Teoremi</h3>
     
     <div class="compositore-campi" id="campi-salvataggio" style="display:none;">
       <div style="flex: 2;">
@@ -64,14 +64,14 @@
       </div>
       <div style="flex: 1; display:flex; align-items:center; gap:5px;">
         <label style="font-size:0.75em; font-weight:bold;">Colore:</label>
-        <input type="color" id="input-colore-teorema" value="#8e44ad" style="height:26px; width:40px; padding:0; border:none; cursor:pointer;">
+        <input type="color" id="input-colore-teorema" value="#8e44ad" style="height:24px; width:40px; padding:0; border:none; cursor:pointer;">
       </div>
       <div style="flex: 2;">
         <input type="text" id="input-enunciato-teorema" placeholder="Enunciato...">
       </div>
     </div>
 
-    <canvas id="canvasPentagrammaCompositore" width="540" height="120"></canvas>
+    <canvas id="canvasPentagrammaCompositore" width="540" height="135"></canvas>
     
     <div id="pannello-modifica-nota">
       <span id="info-nota-selezionata" style="font-weight:bold; color:#1e293b;">Nota: -</span>
@@ -100,7 +100,7 @@
 
 <script>
 // ==========================================
-// MOTORE AUDIO: ACUSTICA AVANZATA E RIVERBERO LEGATO
+// MOTORE AUDIO: ACUSTICA E DURATA INTERATTIVA (HOLD-TO-PLAY)
 // ==========================================
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -134,22 +134,19 @@ function avviaNota(frequenza) {
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(frequenza, audioCtx.currentTime);
 
-    // Filtro armonico ricco
     filter.type = 'lowpass';
     filter.frequency.value = frequenza * 2.4; 
     filter.Q.value = 1.4;
 
-    // Vibrato naturale (LFO)
     lfo.type = 'sine';
     lfo.frequency.value = 5.5;
     lfoGain.gain.value = frequenza * 0.018; 
     lfo.connect(lfoGain);
     lfoGain.connect(osc.frequency);
 
-    // Inviluppo ADSR super armonioso per evitare stacchi secchi
     gain.gain.setValueAtTime(0, audioCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.38, audioCtx.currentTime + 0.12);
-    gain.gain.exponentialRampToValueAtTime(0.28, audioCtx.currentTime + 0.5); 
+    gain.gain.linearRampToValueAtTime(0.38, audioCtx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + 0.4); 
     
     osc.connect(filter);
     filter.connect(gain);
@@ -160,7 +157,6 @@ function avviaNota(frequenza) {
     lfo.start();
 
     nodoAudioCorrente = { osc, filter, lfo, lfoGain, gain };
-    timeoutChiusuraNota = setTimeout(() => { fermaNota(); }, 5000);
   } catch (e) { console.error(e); }
 }
 
@@ -171,8 +167,7 @@ function fermaNota() {
     try {
       nodoAudioCorrente.gain.gain.cancelScheduledValues(tempoAttuale);
       nodoAudioCorrente.gain.gain.setValueAtTime(nodoAudioCorrente.gain.gain.value, tempoAttuale);
-      // Riverbero / Coda armonica estesa a 2.6 secondi per un legato fluido
-      nodoAudioCorrente.gain.gain.exponentialRampToValueAtTime(0.0001, tempoAttuale + 2.6); 
+      nodoAudioCorrente.gain.gain.exponentialRampToValueAtTime(0.0001, tempoAttuale + 2.2); 
     } catch(e) {}
     
     const nodiDaChiudere = { ...nodoAudioCorrente };
@@ -183,7 +178,7 @@ function fermaNota() {
         nodiDaChiudere.lfo.disconnect(); nodiDaChiudere.lfoGain.disconnect();
         nodiDaChiudere.gain.disconnect(); 
       } catch(e) {} 
-    }, 2700);
+    }, 2300);
   }
   nodoAudioCorrente = { osc: null, filter: null, lfo: null, lfoGain: null, gain: null };
 }
@@ -343,8 +338,8 @@ let indiceNotaSelezionataCompositore = null;
 let indiceInRiproduzioneCompositore = null;
 let idTeoremaInModifica = null;
 let nodoPremutoCorrente = null;
-let inModalitaCreazioneNuovo = false;
 let tempoInizioPressione = 0;
+let inModalitaCreazioneNuovo = false;
 
 function DOMPurify(str) {
   const div = document.createElement('div');
@@ -416,7 +411,8 @@ function popolaLista() {
       }
     });
 
-    spanTesto.addEventListener('mousedown', () => {
+    spanTesto.addEventListener('mousedown', (e) => {
+      e.preventDefault();
       regolaSelezionataId = regola.id;
       popolaLista();
       
@@ -442,6 +438,7 @@ function popolaLista() {
           disegnaPentagrammaCompositore();
           const nomeCordaChiave = ["E", "A", "D", "G"][regola.corda];
           avviaNota(frequenzeBase[nomeCordaChiave][regola.pos]);
+          tempoInizioPressione = Date.now();
         }
       }
     });
@@ -453,7 +450,7 @@ function popolaLista() {
 }
 
 function getCoordNodo(corda, pos) {
-  const xStart = 80, xEnd = 900, yStart = 45, yEnd = 215;
+  const xStart = 80, xEnd = 900, yStart = 40, yEnd = 200;
   return { 
     x: xStart + pos * ((xEnd - xStart) / 12), 
     y: yStart + (yEnd - yStart) * (corda / 3) 
@@ -462,25 +459,39 @@ function getCoordNodo(corda, pos) {
 
 function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#1e1e1e"; ctx.fillRect(50, 25, 880, 210);
-  ctx.fillStyle = "#2c2c2c"; ctx.fillRect(50, 25, 20, 210);
+  ctx.fillStyle = "#1e1e1e"; ctx.fillRect(50, 20, 880, 195);
+  ctx.fillStyle = "#2c2c2c"; ctx.fillRect(50, 20, 20, 195);
 
   for (let c = 0; c < 4; c++) {
-    const y = 45 + (170 / 3) * c;
+    const y = 40 + (155 / 3) * c;
     ctx.beginPath(); ctx.moveTo(50, y); ctx.lineTo(930, y);
     ctx.strokeStyle = c < 2 ? "#ffffff" : "#dcdcdc"; ctx.lineWidth = 1.5 + c * 0.3; ctx.stroke();
   }
+
+  // Doppia nomenclatura: Italiana + Internazionale tra parentesi
+  const conversioneItaliana = {
+    "C": "Do", "C#": "Do♯",
+    "D": "Re", "D#": "Re♯",
+    "E": "Mi",
+    "F": "Fa", "F#": "Fa♯",
+    "G": "Sol", "G#": "Sol♯",
+    "A": "La", "A#": "La♯",
+    "B": "Si"
+  };
 
   for (let c = 0; c < 4; c++) {
     for (let p = 0; p < 13; p++) {
       const { x, y } = getCoordNodo(c, p);
       const nomeNotaCompleto = schemaCorde[c][p];
       const nomeNotaSenzaOttava = nomeNotaCompleto.replace(/\d/g, '');
+      const nomeItaliano = conversioneItaliana[nomeNotaSenzaOttava] || nomeNotaSenzaOttava;
+      const etichettaDoppia = `${nomeItaliano} (${nomeNotaSenzaOttava})`;
+
       const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p && String(r.id).startsWith('b'));
       const èAttiva = regolaTrovata && (regolaTrovata.id === attivaId);
       const èLive = notaEvidenziataLive && (notaEvidenziataLive.corda === c && notaEvidenziataLive.pos === p);
 
-      ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2);
       if (èLive) { ctx.fillStyle = "#e74c3c"; ctx.shadowColor = "#e74c3c"; ctx.shadowBlur = 20; } 
       else if (èAttiva) { ctx.fillStyle = regolaTrovata.colore; ctx.shadowColor = regolaTrovata.colore; ctx.shadowBlur = 15; } 
       else { ctx.fillStyle = "#cccccc"; ctx.shadowBlur = 0; }
@@ -488,9 +499,11 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
 
       ctx.lineWidth = 1.5; ctx.strokeStyle = (èAttiva || èLive) ? "#ffffff" : "#777777"; ctx.stroke();
       
+      // Testo con doppia notazione (italiana + internazionale)
       ctx.fillStyle = (èAttiva || èLive) ? "#ffffff" : "#222222";
-      ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(nomeNotaSenzaOttava, x, y);
+      ctx.font = "bold 7.5px Arial"; 
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(etichettaDoppia, x, y);
     }
   }
 }
@@ -503,7 +516,7 @@ canvas.addEventListener('mousemove', (e) => {
 
   for (let c = 0; c < 4; c++) {
     for (let p = 0; p < 13; p++) {
-      if (Math.hypot(mouseX - getCoordNodo(c, p).x, mouseY - getCoordNodo(c, p).y) <= 12) {
+      if (Math.hypot(mouseX - getCoordNodo(c, p).x, mouseY - getCoordNodo(c, p).y) <= 13) {
         trovatoHover = { corda: c, pos: p }; break;
       }
     }
@@ -546,7 +559,7 @@ canvas.addEventListener('mousedown', (e) => {
 
   for (let c = 0; c < 4; c++) {
     for (let p = 0; p < 13; p++) {
-      if (Math.hypot(mouseX - getCoordNodo(c, p).x, mouseY - getCoordNodo(c, p).y) <= 12) {
+      if (Math.hypot(mouseX - getCoordNodo(c, p).x, mouseY - getCoordNodo(c, p).y) <= 13) {
         avviaNota(frequenzeBase[["E", "A", "D", "G"][c]][p]);
         tempoInizioPressione = Date.now();
         nodoPremutoCorrente = { corda: c, pos: p };
@@ -591,7 +604,7 @@ window.addEventListener('mouseup', () => {
 });
 
 // ==========================================
-// PENTAGRAMMA E NOTAZIONE UFFICIALE (Vettoriale Dettagliata)
+// PENTAGRAMMA E NOTAZIONE UFFICIALE
 // ==========================================
 const canvasPentagramma = document.getElementById('canvasPentagrammaCompositore');
 const ctxPentagramma = canvasPentagramma.getContext('2d');
@@ -601,7 +614,7 @@ function disegnaPentagrammaCompositore() {
   ctxPentagramma.clearRect(0, 0, canvasPentagramma.width, canvasPentagramma.height);
 
   for (let rigo = 0; rigo < 2; rigo++) {
-    const baseY = 20 + (rigo * 65);
+    const baseY = 25 + (rigo * 65);
     [baseY, baseY + 8, baseY + 16, baseY + 24, baseY + 32].forEach(y => {
       ctxPentagramma.beginPath(); ctxPentagramma.moveTo(30, y); ctxPentagramma.lineTo(525, y);
       ctxPentagramma.strokeStyle = "#888"; ctxPentagramma.lineWidth = 1; ctxPentagramma.stroke();
@@ -626,7 +639,7 @@ function disegnaPentagrammaCompositore() {
       const nomeNotaCompleto = schemaCorde[elem.corda][elem.pos];
       const nomeNotaSenzaOttava = nomeNotaCompleto.replace(/\d/g, '');
       const yNote = getAltezzaUfficialePentagramma(nomeNotaCompleto, rigoCorrente);
-      const baseYRigo = 20 + (rigoCorrente * 65);
+      const baseYRigo = 25 + (rigoCorrente * 65);
 
       if (yNote >= baseYRigo + 40) { for (let l = baseYRigo + 40; l <= yNote; l += 8) { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX - 7, l); ctxPentagramma.lineTo(offsetX + 7, l); ctxPentagramma.stroke(); } } 
       else if (yNote <= baseYRigo - 8) { for (let l = baseYRigo - 8; l >= yNote; l -= 8) { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX - 7, l); ctxPentagramma.lineTo(offsetX + 7, l); ctxPentagramma.stroke(); } }
@@ -666,7 +679,7 @@ function disegnaPentagrammaCompositore() {
       }
 
       ctxPentagramma.font = "9px Arial"; ctxPentagramma.fillStyle = "#555"; 
-      ctxPentagramma.fillText(nomeNotaSenzaOttava, offsetX - 6, (rigoCorrente === 0 ? 62 : 127));
+      ctxPentagramma.fillText(nomeNotaSenzaOttava, offsetX - 6, (rigoCorrente === 0 ? 67 : 132));
       
       let addSpace = 25;
       if (elem.tipoNota === 'semibreve') addSpace = 45;
@@ -675,7 +688,7 @@ function disegnaPentagrammaCompositore() {
       offsetX += addSpace;
 
     } else {
-      ctxPentagramma.font = "bold 16px serif"; ctxPentagramma.fillText("𝄾", offsetX - 5, (rigoCorrente === 0 ? 42 : 107));
+      ctxPentagramma.font = "bold 16px serif"; ctxPentagramma.fillText("𝄾", offsetX - 5, (rigoCorrente === 0 ? 47 : 112));
       offsetX += 25;
     }
   });
@@ -736,7 +749,6 @@ function riproduciSequenzaTeorema(regola) {
     if (elem.tipo === 'nota') {
       avviaNota(frequenzeBase[["E", "A", "D", "G"][elem.corda]][elem.pos]);
       DisegnaTastiera(regola.id, { corda: elem.corda, pos: elem.pos });
-      // Intervallo ridotto a 30ms per favorire la sovrapposizione e la continuità (Legato)
       setTimeout(() => { fermaNota(); i++; setTimeout(suonaProssima, 30); }, elem.durataMs);
     } else {
       DisegnaTastiera(regola.id);
