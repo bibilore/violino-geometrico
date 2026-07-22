@@ -10,6 +10,11 @@
   Autrice e Titolare dei Diritti: Bianca Lorenzini
   Tutti i diritti riservati. È vietata qualsiasi copia, 
   riproduzione, modifica o distribuzione non autorizzata.
+  
+  Nota tecnica: Il codice sorgente è stato generato in 
+  collaborazione con un'Intelligenza Artificiale; l'autrice 
+  detiene la proprietà esclusiva del progetto ma non si 
+  assume alcuna responsabilità tecnica sulla struttura del codice.
   ============================================================
 -->
 <title>Violino Geometrico - di Bianca Lorenzini</title>
@@ -199,7 +204,6 @@
   <canvas id="canvasViolino" width="950" height="260"></canvas>
   <div id="riquadro-enunciato"><strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.</div>
 
-  <!-- Pannello Spartito fisso e permanente nel layout -->
   <div id="pannello-compositore">
     <h3 id="titolo-pannello-compositore" style="margin:0; font-size:1em; color:#2c3e50;">Spartito e Composizione Teoremi</h3>
     
@@ -325,11 +329,12 @@ const frequenzeBase = {
   "G": [196.00, 207.65, 220.00, 233.08, 246.94, 261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00]
 };
 
+// Mappatura rigorosa basata sul manuale di teoria musicale (Chiave di Violino e Tagli addizionali)
 function getAltezzaUfficialePentagramma(notaNome, rigoIndex = 0) {
   const mappaNote = {
     "G3": 45, "G#3": 45, "A3": 42, "A#3": 42, "B3": 39,
-    "C4": 36, "C#4": 36, "D4": 33, "D#4": 33, "E4": 30,
-    "F4": 27, "F#4": 27, "G4": 24, "G#4": 24, "A4": 21,
+    "C4": 36, "C#4": 36, "D4": 33, "D#4": 33, "E4": 30, // E4 = 1ª Linea
+    "F4": 27, "F#4": 27, "G4": 24, "G#4": 24, "A4": 21, // A4 = 2º Spazio
     "A#4": 21, "B4": 18, "C5": 15, "C#5": 15, "D5": 12,
     "D#5": 12, "E5": 9, "F5": 6, "F#5": 6, "G5": 3
   };
@@ -703,7 +708,6 @@ window.addEventListener('mouseup', () => {
         alert("Hai raggiunto il limite massimo di 50 note per questo teorema!");
       }
     } else {
-      // Modalità normale: suona e mostra in tempo reale
       sequenzaCompositoreCorrente = [{ tipo: 'nota', corda: c, pos: p, tipoNota: infoNota.tipoNota, durataMs: infoNota.durataMs }];
       disegnaPentagrammaCompositore();
 
@@ -730,7 +734,6 @@ function disegnaPentagrammaCompositore() {
   if (!ctxPentagrammaCompositore) return;
   ctxPentagrammaCompositore.clearRect(0, 0, canvasPentagrammaCompositore.width, canvasPentagrammaCompositore.height);
 
-  // Disegno fino a 2 righe di pentagramma per supportare fino a 50+ note
   for (let rigo = 0; rigo < 2; rigo++) {
     const baseY = 20 + (rigo * 65);
     const lineeY = [baseY, baseY + 8, baseY + 16, baseY + 24, baseY + 32];
@@ -768,6 +771,24 @@ function disegnaPentagrammaCompositore() {
       const nomeNota = schemaCorde[elem.corda][elem.pos];
       const yNote = getAltezzaUfficialePentagramma(nomeNota, rigoCorrente);
       
+      // Gestione tagli addizionali (sopralinee e sottolinee come da manuale)
+      const baseYRigo = 20 + (rigoCorrente * 65);
+      if (yNote >= baseYRigo + 40) { // Sottolinee per note gravi
+        for (let l = baseYRigo + 40; l <= yNote; l += 8) {
+          ctxPentagrammaCompositore.beginPath();
+          ctxPentagrammaCompositore.moveTo(offsetX - 7, l);
+          ctxPentagrammaCompositore.lineTo(offsetX + 7, l);
+          ctxPentagrammaCompositore.stroke();
+        }
+      } else if (yNote <= baseYRigo - 8) { // Sopralinee per note acute
+        for (let l = baseYRigo - 8; l >= yNote; l -= 8) {
+          ctxPentagrammaCompositore.beginPath();
+          ctxPentagrammaCompositore.moveTo(offsetX - 7, l);
+          ctxPentagrammaCompositore.lineTo(offsetX + 7, l);
+          ctxPentagrammaCompositore.stroke();
+        }
+      }
+
       ctxPentagrammaCompositore.beginPath();
       ctxPentagrammaCompositore.arc(offsetX, yNote, 3.5, 0, Math.PI * 2);
       if (elem.tipoNota === 'minima' || elem.tipoNota === 'semibreve') {
