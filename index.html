@@ -100,7 +100,7 @@
 
 <script>
 // ==========================================
-// MOTORE AUDIO: ACUSTICA AVANZATA VIOLINO
+// MOTORE AUDIO: ACUSTICA AVANZATA E RIVERBERO LEGATO
 // ==========================================
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -134,19 +134,22 @@ function avviaNota(frequenza) {
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(frequenza, audioCtx.currentTime);
 
+    // Filtro armonico ricco
     filter.type = 'lowpass';
-    filter.frequency.value = frequenza * 2.2; 
-    filter.Q.value = 1.2;
+    filter.frequency.value = frequenza * 2.4; 
+    filter.Q.value = 1.4;
 
+    // Vibrato naturale (LFO)
     lfo.type = 'sine';
     lfo.frequency.value = 5.5;
-    lfoGain.gain.value = frequenza * 0.015; 
+    lfoGain.gain.value = frequenza * 0.018; 
     lfo.connect(lfoGain);
     lfoGain.connect(osc.frequency);
 
+    // Inviluppo ADSR super armonioso per evitare stacchi secchi
     gain.gain.setValueAtTime(0, audioCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.1);
-    gain.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + 0.4); 
+    gain.gain.linearRampToValueAtTime(0.38, audioCtx.currentTime + 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.28, audioCtx.currentTime + 0.5); 
     
     osc.connect(filter);
     filter.connect(gain);
@@ -157,7 +160,7 @@ function avviaNota(frequenza) {
     lfo.start();
 
     nodoAudioCorrente = { osc, filter, lfo, lfoGain, gain };
-    timeoutChiusuraNota = setTimeout(() => { fermaNota(); }, 4000);
+    timeoutChiusuraNota = setTimeout(() => { fermaNota(); }, 5000);
   } catch (e) { console.error(e); }
 }
 
@@ -168,7 +171,8 @@ function fermaNota() {
     try {
       nodoAudioCorrente.gain.gain.cancelScheduledValues(tempoAttuale);
       nodoAudioCorrente.gain.gain.setValueAtTime(nodoAudioCorrente.gain.gain.value, tempoAttuale);
-      nodoAudioCorrente.gain.gain.exponentialRampToValueAtTime(0.0001, tempoAttuale + 1.8); 
+      // Riverbero / Coda armonica estesa a 2.6 secondi per un legato fluido
+      nodoAudioCorrente.gain.gain.exponentialRampToValueAtTime(0.0001, tempoAttuale + 2.6); 
     } catch(e) {}
     
     const nodiDaChiudere = { ...nodoAudioCorrente };
@@ -179,7 +183,7 @@ function fermaNota() {
         nodiDaChiudere.lfo.disconnect(); nodiDaChiudere.lfoGain.disconnect();
         nodiDaChiudere.gain.disconnect(); 
       } catch(e) {} 
-    }, 1900);
+    }, 2700);
   }
   nodoAudioCorrente = { osc: null, filter: null, lfo: null, lfoGain: null, gain: null };
 }
@@ -299,7 +303,7 @@ function salvaInLocale(teorema, isUpdate = false) {
       teoremiCustom[index] = teorema;
     }
   } else {
-    teorema.id = 'c_' + Date.now(); // Genera un ID locale univoco basato sul tempo
+    teorema.id = 'c_' + Date.now();
     teoremiCustom.push(teorema);
   }
 
@@ -732,7 +736,8 @@ function riproduciSequenzaTeorema(regola) {
     if (elem.tipo === 'nota') {
       avviaNota(frequenzeBase[["E", "A", "D", "G"][elem.corda]][elem.pos]);
       DisegnaTastiera(regola.id, { corda: elem.corda, pos: elem.pos });
-      setTimeout(() => { fermaNota(); i++; setTimeout(suonaProssima, 80); }, elem.durataMs);
+      // Intervallo ridotto a 30ms per favorire la sovrapposizione e la continuità (Legato)
+      setTimeout(() => { fermaNota(); i++; setTimeout(suonaProssima, 30); }, elem.durataMs);
     } else {
       DisegnaTastiera(regola.id);
       setTimeout(() => { i++; suonaProssima(); }, elem.durataMs);
@@ -761,7 +766,7 @@ document.getElementById('seq-registra').onclick = () => {
     if (elem.tipo === 'nota') {
       avviaNota(frequenzeBase[["E", "A", "D", "G"][elem.corda]][elem.pos]);
       DisegnaTastiera(null, { corda: elem.corda, pos: elem.pos });
-      setTimeout(() => { fermaNota(); i++; setTimeout(suonaEregistra, 80); }, elem.durataMs);
+      setTimeout(() => { fermaNota(); i++; setTimeout(suonaEregistra, 30); }, elem.durataMs);
     } else { DisegnaTastiera(); setTimeout(() => { i++; suonaEregistra(); }, elem.durataMs); }
   }
   suonaEregistra();
