@@ -28,7 +28,10 @@
   #pannello-destro { width: 65%; display: flex; flex-direction: column; padding: 10px 20px; align-items: center; overflow-y: auto; }
   h2.titolo-app { margin: 0 0 5px 0; color: #2c3e50; font-size: 1.2em; align-self: flex-start; }
   canvas { background: #111; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); max-width: 100%; height: auto; cursor: pointer; }
-  #riquadro-enunciato { margin-top: 6px; padding: 8px 12px; background: #fff; border-left: 5px solid #ccc; width: 90%; min-height: 35px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 0.8em; user-select: text; }
+  /* Spaziatura corretta e distziata tra titolo ed enunciato */
+  #riquadro-enunciato { margin-top: 6px; padding: 12px 14px; background: #fff; border-left: 5px solid #ccc; width: 90%; min-height: 45px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 0.85em; user-select: text; line-height: 1.5; }
+  #riquadro-enunciato strong { display: block; margin-bottom: 6px; font-size: 1.05em; color: #2c3e50; }
+  
   #pannello-compositore { margin-top: 8px; background: #ffffff; padding: 10px 15px; border-radius: 8px; width: 90%; box-shadow: 0 2px 8px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; }
   .compositore-campi { display: flex; gap: 10px; }
   .compositore-campi input { padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.8em; box-sizing: border-box; width: 100%; }
@@ -53,7 +56,7 @@
 <div id="pannello-destro">
   <h2 class="titolo-app">🎻 Violino Geometrico — di Bianca Lorenzini</h2>
   <canvas id="canvasViolino" width="950" height="240"></canvas>
-  <div id="riquadro-enunciato"><strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.</div>
+  <div id="riquadro-enunciato"><strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.</div>
 
   <div id="pannello-compositore">
     <h3 id="titolo-pannello-compositore" style="margin:0; font-size:0.95em; color:#2c3e50;">Spartito e Composizione Teoremi</h3>
@@ -71,7 +74,8 @@
       </div>
     </div>
 
-    <canvas id="canvasPentagrammaCompositore" width="540" height="135"></canvas>
+    <!-- Canvas spartito con altezza aumentata e centrato verticalmente per non tagliare le note acute -->
+    <canvas id="canvasPentagrammaCompositore" width="540" height="150"></canvas>
     
     <div id="pannello-modifica-nota">
       <span id="info-nota-selezionata" style="font-weight:bold; color:#1e293b;">Nota: -</span>
@@ -219,7 +223,8 @@ function getAltezzaUfficialePentagramma(notaNome, rigoIndex = 0) {
     "C6": -23, "C#6": -23, "D6": -27, "D#6": -27, "E6": -31
   };
   const offsetBase = mappaNote[notaNome] !== undefined ? mappaNote[notaNome] : 13;
-  return offsetBase + (rigoIndex * 65);
+  // Shift verso il basso per garantire ampio margine superiore per le note acute
+  return offsetBase + (rigoIndex * 70) + 10;
 }
 
 function calcolaDurataEFigura(tempoMs) {
@@ -395,7 +400,7 @@ function popolaLista() {
     spanTesto.addEventListener('mouseenter', () => {
       if (regolaSelezionataId !== regola.id) {
         enunciatoEl.style.display = 'block';
-        enunciatoEl.innerHTML = `<strong>${DOMPurify(regola.titolo)}</strong><br>${DOMPurify(regola.enunciato)}`;
+        enunciatoEl.innerHTML = `<strong>${DOMPurify(regola.titolo)}</strong>${DOMPurify(regola.enunciato)}`;
         enunciatoEl.style.borderLeftColor = regola.colore;
         DisegnaTastiera(regola.id);
       }
@@ -404,7 +409,7 @@ function popolaLista() {
     spanTesto.addEventListener('mouseleave', () => {
       if (regolaSelezionataId !== regola.id) {
         if (!regolaSelezionataId) {
-          enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.`;
+          enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.`;
           enunciatoEl.style.borderLeftColor = "#ccc";
         }
         DisegnaTastiera(regolaSelezionataId);
@@ -417,7 +422,7 @@ function popolaLista() {
       popolaLista();
       
       enunciatoEl.style.display = 'block';
-      enunciatoEl.innerHTML = `<strong>${DOMPurify(regola.titolo)}</strong><br>${DOMPurify(regola.enunciato)}`;
+      enunciatoEl.innerHTML = `<strong>${DOMPurify(regola.titolo)}</strong>${DOMPurify(regola.enunciato)}`;
       enunciatoEl.style.borderLeftColor = regola.colore;
       DisegnaTastiera(regola.id);
 
@@ -468,7 +473,7 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
     ctx.strokeStyle = c < 2 ? "#ffffff" : "#dcdcdc"; ctx.lineWidth = 1.5 + c * 0.3; ctx.stroke();
   }
 
-  // Doppia nomenclatura: Italiana + Internazionale tra parentesi
+  // Doppia nomenclatura chiara: Italiana + Internazionale
   const conversioneItaliana = {
     "C": "Do", "C#": "Do♯",
     "D": "Re", "D#": "Re♯",
@@ -499,7 +504,7 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
 
       ctx.lineWidth = 1.5; ctx.strokeStyle = (èAttiva || èLive) ? "#ffffff" : "#777777"; ctx.stroke();
       
-      // Testo con doppia notazione (italiana + internazionale)
+      // Testo con doppia notazione perfettamente visibile
       ctx.fillStyle = (èAttiva || èLive) ? "#ffffff" : "#222222";
       ctx.font = "bold 7.5px Arial"; 
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -527,17 +532,17 @@ canvas.addEventListener('mousemove', (e) => {
     canvas.style.cursor = 'pointer';
     const regolaTrovata = regoleGeometria.find(r => r.corda === trovatoHover.corda && r.pos === trovatoHover.pos && String(r.id).startsWith('b'));
     if (regolaTrovata) {
-      enunciatoEl.innerHTML = `<strong>${DOMPurify(regolaTrovata.titolo)}</strong><br>${DOMPurify(regolaTrovata.enunciato)}`;
+      enunciatoEl.innerHTML = `<strong>${DOMPurify(regolaTrovata.titolo)}</strong>${DOMPurify(regolaTrovata.enunciato)}`;
       enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
       DisegnaTastiera(regolaTrovata.id);
     } else {
-      if (!regolaSelezionataId) enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.`;
+      if (!regolaSelezionataId) enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.`;
       DisegnaTastiera(regolaSelezionataId);
     }
   } else {
     canvas.style.cursor = 'default';
     if (!regolaSelezionataId) {
-      enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.`;
+      enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.`;
       enunciatoEl.style.borderLeftColor = "#ccc";
       DisegnaTastiera();
     } else {
@@ -549,7 +554,7 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseleave', () => {
   canvas.style.cursor = 'default';
   if (regolaSelezionataId) { DisegnaTastiera(regolaSelezionataId); } 
-  else { enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.`; enunciatoEl.style.borderLeftColor = "#ccc"; DisegnaTastiera(); }
+  else { enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.`; enunciatoEl.style.borderLeftColor = "#ccc"; DisegnaTastiera(); }
 });
 
 canvas.addEventListener('mousedown', (e) => {
@@ -593,7 +598,7 @@ window.addEventListener('mouseup', () => {
         regolaSelezionataId = regolaTrovata.id;
         popolaLista();
         enunciatoEl.style.display = 'block';
-        enunciatoEl.innerHTML = `<strong>${DOMPurify(regolaTrovata.titolo)}</strong><br>${DOMPurify(regolaTrovata.enunciato)}`;
+        enunciatoEl.innerHTML = `<strong>${DOMPurify(regolaTrovata.titolo)}</strong>${DOMPurify(regolaTrovata.enunciato)}`;
         enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
         DisegnaTastiera(regolaTrovata.id);
       }
@@ -604,7 +609,7 @@ window.addEventListener('mouseup', () => {
 });
 
 // ==========================================
-// PENTAGRAMMA E NOTAZIONE UFFICIALE
+// PENTAGRAMMA E NOTAZIONE UFFICIALE (Margini e altezze ottimizzate)
 // ==========================================
 const canvasPentagramma = document.getElementById('canvasPentagrammaCompositore');
 const ctxPentagramma = canvasPentagramma.getContext('2d');
@@ -614,7 +619,7 @@ function disegnaPentagrammaCompositore() {
   ctxPentagramma.clearRect(0, 0, canvasPentagramma.width, canvasPentagramma.height);
 
   for (let rigo = 0; rigo < 2; rigo++) {
-    const baseY = 25 + (rigo * 65);
+    const baseY = 32 + (rigo * 70);
     [baseY, baseY + 8, baseY + 16, baseY + 24, baseY + 32].forEach(y => {
       ctxPentagramma.beginPath(); ctxPentagramma.moveTo(30, y); ctxPentagramma.lineTo(525, y);
       ctxPentagramma.strokeStyle = "#888"; ctxPentagramma.lineWidth = 1; ctxPentagramma.stroke();
@@ -639,7 +644,7 @@ function disegnaPentagrammaCompositore() {
       const nomeNotaCompleto = schemaCorde[elem.corda][elem.pos];
       const nomeNotaSenzaOttava = nomeNotaCompleto.replace(/\d/g, '');
       const yNote = getAltezzaUfficialePentagramma(nomeNotaCompleto, rigoCorrente);
-      const baseYRigo = 25 + (rigoCorrente * 65);
+      const baseYRigo = 32 + (rigoCorrente * 70);
 
       if (yNote >= baseYRigo + 40) { for (let l = baseYRigo + 40; l <= yNote; l += 8) { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX - 7, l); ctxPentagramma.lineTo(offsetX + 7, l); ctxPentagramma.stroke(); } } 
       else if (yNote <= baseYRigo - 8) { for (let l = baseYRigo - 8; l >= yNote; l -= 8) { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX - 7, l); ctxPentagramma.lineTo(offsetX + 7, l); ctxPentagramma.stroke(); } }
@@ -679,7 +684,7 @@ function disegnaPentagrammaCompositore() {
       }
 
       ctxPentagramma.font = "9px Arial"; ctxPentagramma.fillStyle = "#555"; 
-      ctxPentagramma.fillText(nomeNotaSenzaOttava, offsetX - 6, (rigoCorrente === 0 ? 67 : 132));
+      ctxPentagramma.fillText(nomeNotaSenzaOttava, offsetX - 6, (rigoCorrente === 0 ? 74 : 144));
       
       let addSpace = 25;
       if (elem.tipoNota === 'semibreve') addSpace = 45;
@@ -688,7 +693,7 @@ function disegnaPentagrammaCompositore() {
       offsetX += addSpace;
 
     } else {
-      ctxPentagramma.font = "bold 16px serif"; ctxPentagramma.fillText("𝄾", offsetX - 5, (rigoCorrente === 0 ? 47 : 112));
+      ctxPentagramma.font = "bold 16px serif"; ctxPentagramma.fillText("𝄾", offsetX - 5, (rigoCorrente === 0 ? 54 : 124));
       offsetX += 25;
     }
   });
