@@ -92,26 +92,13 @@
       <button class="btn-seq" id="seq-ascolta">▶️ Ascolta</button>
       <button class="btn-seq" id="seq-registra" style="background:#e67e22;">🔴 Registra Audio</button>
       <button class="btn-seq" id="seq-pulisci" style="background:#c0392b;">🗑️ Pulisci Tutto</button>
-      <button class="btn-seq" style="background:#27ae60; display:none;" id="btn-salva-teorema">💾 Salva in Database</button>
+      <button class="btn-seq" style="background:#27ae60; display:none;" id="btn-salva-teorema">💾 Salva in Locale</button>
       <button class="btn-seq" style="background:#95a5a6; display:none;" id="btn-chiudi-compositore">Annulla</button>
     </div>
   </div>
 </div>
 
 <script>
-// ==========================================
-// CONFIGURAZIONE SUPABASE
-// ==========================================
-const SUPABASE_URL = "https://fwmlplwqtoikwwgmaqfr.supabase.co/rest/v1/";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3bWxwbHdxdG9pa3d3Z21hcWZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MTI5NTUsImV4cCI6MjEwMDI4ODk1NX0.n_k6oOFlfzzZM-SjA0z2BlBiySAefx27dOVnCtZShLw";
-
-const headers = {
-  'Content-Type': 'application/json',
-  'apikey': SUPABASE_ANON_KEY,
-  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-  'Prefer': 'return=representation'
-};
-
 // ==========================================
 // MOTORE AUDIO: ACUSTICA AVANZATA VIOLINO
 // ==========================================
@@ -181,8 +168,7 @@ function fermaNota() {
     try {
       nodoAudioCorrente.gain.gain.cancelScheduledValues(tempoAttuale);
       nodoAudioCorrente.gain.gain.setValueAtTime(nodoAudioCorrente.gain.gain.value, tempoAttuale);
-      // Decadimento esponenziale esteso per generare la coda armonica (1.5 secondi)
-      nodoAudioCorrente.gain.gain.exponentialRampToValueAtTime(0.0001, tempoAttuale + 1.5); 
+      nodoAudioCorrente.gain.gain.exponentialRampToValueAtTime(0.0001, tempoAttuale + 1.8); 
     } catch(e) {}
     
     const nodiDaChiudere = { ...nodoAudioCorrente };
@@ -193,7 +179,7 @@ function fermaNota() {
         nodiDaChiudere.lfo.disconnect(); nodiDaChiudere.lfoGain.disconnect();
         nodiDaChiudere.gain.disconnect(); 
       } catch(e) {} 
-    }, 1600);
+    }, 1900);
   }
   nodoAudioCorrente = { osc: null, filter: null, lfo: null, lfoGain: null, gain: null };
 }
@@ -212,7 +198,6 @@ function fermaNotaImmediata() {
 // ==========================================
 // COSTANTI MUSICALI
 // ==========================================
-// Matrice indicizzata per ottave esatte per il calcolo delle coordinate verticali
 const schemaCorde = [
   ["E5", "F5", "F#5", "G5", "G#5", "A5", "A#5", "B5", "C6", "C#6", "D6", "D#6", "E6"],       
   ["A4", "A#4", "B4", "C5", "C#5", "D5", "D#5", "E5", "F5", "F#5", "G5", "G#5", "A5"],       
@@ -286,16 +271,20 @@ let teoremiCustom = [];
 let regoleGeometria = [...regoleBase];
 
 // ==========================================
-// SUPABASE API
+// GESTIONE ARCHIVIO LOCALE (LocalStorage)
 // ==========================================
-async function caricaDaDatabase() {
+function caricaDaLocale() {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/teoremi_custom?select=*`, { headers });
-    if (res.ok) {
-      teoremiCustom = await res.json();
-      teoremiCustom.forEach(t => { if(!Array.isArray(t.sequenza)) t.sequenza = []; });
+    const salvati = localStorage.getItem('violino_geometrico_teoremi');
+    if (salvati) {
+      teoremiCustom = JSON.parse(salvati);
+    } else {
+      teoremiCustom = [];
     }
-  } catch(e) { console.error("Errore recupero DB:", e); }
+  } catch(e) {
+    console.error("Errore lettura localStorage:", e);
+    teoremiCustom = [];
+  }
   
   regoleGeometria = [...regoleBase, ...teoremiCustom];
   popolaLista();
@@ -303,37 +292,35 @@ async function caricaDaDatabase() {
   disegnaPentagrammaCompositore();
 }
 
-async function salvaInDatabase(teorema, isUpdate = false) {
-  const url = isUpdate ? `${SUPABASE_URL}/rest/v1/teoremi_custom?id=eq.${teorema.id}` : `${SUPABASE_URL}/rest/v1/teoremi_custom`;
-  const method = isUpdate ? 'PATCH' : 'POST';
-  
-  const payload = {
-    titolo: teorema.titolo,
-    enunciato: teorema.enunciato,
-    colore: teorema.colore,
-    sequenza: teorema.sequenza
-  };
+function salvaInLocale(teorema, isUpdate = false) {
+  if (isUpdate) {
+    const index = teoremiCustom.findIndex(t => t.id === teorema.id);
+    if (index !== -1) {
+      teoremiCustom[index] = teorema;
+    }
+  } else {
+    teorema.id = 'c_' + Date.now(); // Genera un ID locale univoco basato sul tempo
+    teoremiCustom.push(teorema);
+  }
 
   try {
-    const res = await fetch(url, { method, headers, body: JSON.stringify(payload) });
-    if(res.ok) {
-      chiudiCompositore();
-      await caricaDaDatabase();
-    } else {
-      const errorText = await res.text();
-      alert("Errore di salvataggio. Controlla le impostazioni RLS su Supabase come descritto.");
-      console.error("Supabase Error:", errorText);
-    }
-  } catch(e) { 
-    console.error("Errore connessione:", e); 
+    localStorage.setItem('violino_geometrico_teoremi', JSON.stringify(teoremiCustom));
+    chiudiCompositore();
+    caricaDaLocale();
+  } catch(e) {
+    console.error("Errore salvataggio localStorage:", e);
+    alert("Impossibile salvare il teorema in locale.");
   }
 }
 
-async function eliminaDaDatabase(id) {
+function eliminaDaLocale(id) {
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/teoremi_custom?id=eq.${id}`, { method: 'DELETE', headers });
-    await caricaDaDatabase();
-  } catch(e) { console.error("Errore eliminazione:", e); }
+    teoremiCustom = teoremiCustom.filter(t => t.id !== id);
+    localStorage.setItem('violino_geometrico_teoremi', JSON.stringify(teoremiCustom));
+    caricaDaLocale();
+  } catch(e) {
+    console.error("Errore eliminazione localStorage:", e);
+  }
 }
 
 // ==========================================
@@ -394,7 +381,7 @@ function popolaLista() {
         e.stopPropagation(); 
         if(confirm("Procedere con l'eliminazione definitiva del record?")) {
             if(regolaSelezionataId === regola.id) regolaSelezionataId = null;
-            eliminaDaDatabase(regola.id);
+            eliminaDaLocale(regola.id);
         }
       };
 
@@ -600,7 +587,7 @@ window.addEventListener('mouseup', () => {
 });
 
 // ==========================================
-// PENTAGRAMMA E NOTAZIONE UFFICIALE
+// PENTAGRAMMA E NOTAZIONE UFFICIALE (Vettoriale Dettagliata)
 // ==========================================
 const canvasPentagramma = document.getElementById('canvasPentagrammaCompositore');
 const ctxPentagramma = canvasPentagramma.getContext('2d');
@@ -822,10 +809,11 @@ document.getElementById('btn-salva-teorema').onclick = () => {
     sequenza: sequenzaCompositoreCorrente
   };
   if (idTeoremaInModifica) nuovoTeorema.id = idTeoremaInModifica;
-  salvaInDatabase(nuovoTeorema, !!idTeoremaInModifica);
+  salvaInLocale(nuovoTeorema, !!idTeoremaInModifica);
 };
 
-caricaDaDatabase();
+// Avvio applicazione con storage locale
+caricaDaLocale();
 </script>
 </body>
 </html>
