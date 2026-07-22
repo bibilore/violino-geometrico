@@ -8,8 +8,6 @@
   PROPRIETÀ INTELLETTUALE E COPYRIGHT UFFICIALE
   Opera: Violino Geometrico
   Autrice e Titolare dei Diritti: Bianca Lorenzini
-  Tutti i diritti riservati. È vietata qualsiasi copia, 
-  riproduzione, modifica o distribuzione non autorizzata.
   ============================================================
 -->
 <title>Violino Geometrico - di Bianca Lorenzini</title>
@@ -146,28 +144,23 @@ function avviaNota(frequenza) {
     const lfoGain = audioCtx.createGain();
     const gain = audioCtx.createGain();
     
-    // Generatore forma d'onda base (dente di sega per archi)
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(frequenza, audioCtx.currentTime);
 
-    // Filtro Passa-Basso per simulare la cassa armonica in legno (taglia le frequenze troppo stridenti)
     filter.type = 'lowpass';
     filter.frequency.value = frequenza * 2.2; 
     filter.Q.value = 1.2;
 
-    // LFO per il Vibrato (circa 5.5 Hz)
     lfo.type = 'sine';
     lfo.frequency.value = 5.5;
-    lfoGain.gain.value = frequenza * 0.015; // Profondità del vibrato proporzionale all'altezza
+    lfoGain.gain.value = frequenza * 0.015; 
     lfo.connect(lfoGain);
     lfoGain.connect(osc.frequency);
 
-    // Inviluppo ADSR (Morbido per simulare l'archetto)
     gain.gain.setValueAtTime(0, audioCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.08); // Attack
-    gain.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + 0.3); // Decay
+    gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + 0.4); 
     
-    // Connessioni
     osc.connect(filter);
     filter.connect(gain);
     gain.connect(audioCtx.destination);
@@ -177,7 +170,6 @@ function avviaNota(frequenza) {
     lfo.start();
 
     nodoAudioCorrente = { osc, filter, lfo, lfoGain, gain };
-
     timeoutChiusuraNota = setTimeout(() => { fermaNota(); }, 4000);
   } catch (e) { console.error(e); }
 }
@@ -189,21 +181,19 @@ function fermaNota() {
     try {
       nodoAudioCorrente.gain.gain.cancelScheduledValues(tempoAttuale);
       nodoAudioCorrente.gain.gain.setValueAtTime(nodoAudioCorrente.gain.gain.value, tempoAttuale);
-      nodoAudioCorrente.gain.gain.exponentialRampToValueAtTime(0.0001, tempoAttuale + 0.3); // Release sfumata
+      // Decadimento esponenziale esteso per generare la coda armonica (1.5 secondi)
+      nodoAudioCorrente.gain.gain.exponentialRampToValueAtTime(0.0001, tempoAttuale + 1.5); 
     } catch(e) {}
     
     const nodiDaChiudere = { ...nodoAudioCorrente };
     timeoutChiusuraNota = setTimeout(() => { 
       try { 
-        nodiDaChiudere.osc.stop(); 
-        nodiDaChiudere.lfo.stop();
-        nodiDaChiudere.osc.disconnect(); 
-        nodiDaChiudere.filter.disconnect();
-        nodiDaChiudere.lfo.disconnect();
-        nodiDaChiudere.lfoGain.disconnect();
+        nodiDaChiudere.osc.stop(); nodiDaChiudere.lfo.stop();
+        nodiDaChiudere.osc.disconnect(); nodiDaChiudere.filter.disconnect();
+        nodiDaChiudere.lfo.disconnect(); nodiDaChiudere.lfoGain.disconnect();
         nodiDaChiudere.gain.disconnect(); 
       } catch(e) {} 
-    }, 350);
+    }, 1600);
   }
   nodoAudioCorrente = { osc: null, filter: null, lfo: null, lfoGain: null, gain: null };
 }
@@ -222,11 +212,12 @@ function fermaNotaImmediata() {
 // ==========================================
 // COSTANTI MUSICALI
 // ==========================================
+// Matrice indicizzata per ottave esatte per il calcolo delle coordinate verticali
 const schemaCorde = [
-  ["E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E"],       
-  ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A"],       
-  ["D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D"],       
-  ["G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G"]        
+  ["E5", "F5", "F#5", "G5", "G#5", "A5", "A#5", "B5", "C6", "C#6", "D6", "D#6", "E6"],       
+  ["A4", "A#4", "B4", "C5", "C#5", "D5", "D#5", "E5", "F5", "F#5", "G5", "G#5", "A5"],       
+  ["D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4", "C5", "C#5", "D5"],       
+  ["G3", "G#3", "A3", "A#3", "B3", "C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4"]        
 ];
 
 const frequenzeBase = {
@@ -237,7 +228,12 @@ const frequenzeBase = {
 };
 
 function getAltezzaUfficialePentagramma(notaNome, rigoIndex = 0) {
-  const mappaNote = { "G3": 45, "G#3": 45, "A3": 41, "A#3": 41, "B3": 37, "C4": 33, "C#4": 33, "D4": 29, "D#4": 29, "E4": 25, "F4": 21, "F#4": 21, "G4": 17, "G#4": 17, "A4": 13, "A#4": 13, "B4": 9, "C5": 5, "C#5": 5, "D5": 1, "D#5": 1, "E5": -3, "F5": -7, "F#5": -7, "G5": -11 };
+  const mappaNote = { 
+    "G3": 45, "G#3": 45, "A3": 41, "A#3": 41, "B3": 37, 
+    "C4": 33, "C#4": 33, "D4": 29, "D#4": 29, "E4": 25, "F4": 21, "F#4": 21, "G4": 17, "G#4": 17, "A4": 13, "A#4": 13, "B4": 9, 
+    "C5": 5, "C#5": 5, "D5": 1, "D#5": 1, "E5": -3, "F5": -7, "F#5": -7, "G5": -11, "G#5": -11, "A5": -15, "A#5": -15, "B5": -19, 
+    "C6": -23, "C#6": -23, "D6": -27, "D#6": -27, "E6": -31
+  };
   const offsetBase = mappaNote[notaNome] !== undefined ? mappaNote[notaNome] : 13;
   return offsetBase + (rigoIndex * 65);
 }
@@ -290,7 +286,7 @@ let teoremiCustom = [];
 let regoleGeometria = [...regoleBase];
 
 // ==========================================
-// SUPABASE API (Rigorosa e blindata)
+// SUPABASE API
 // ==========================================
 async function caricaDaDatabase() {
   try {
@@ -311,7 +307,6 @@ async function salvaInDatabase(teorema, isUpdate = false) {
   const url = isUpdate ? `${SUPABASE_URL}/rest/v1/teoremi_custom?id=eq.${teorema.id}` : `${SUPABASE_URL}/rest/v1/teoremi_custom`;
   const method = isUpdate ? 'PATCH' : 'POST';
   
-  // Rimuovo l'id per evitare conflitti con la generazione automatica (UUID) nel POST
   const payload = {
     titolo: teorema.titolo,
     enunciato: teorema.enunciato,
@@ -320,23 +315,17 @@ async function salvaInDatabase(teorema, isUpdate = false) {
   };
 
   try {
-    const res = await fetch(url, { 
-      method, 
-      headers, 
-      body: JSON.stringify(payload) 
-    });
-    
+    const res = await fetch(url, { method, headers, body: JSON.stringify(payload) });
     if(res.ok) {
       chiudiCompositore();
       await caricaDaDatabase();
     } else {
       const errorText = await res.text();
-      alert("Errore durante il salvataggio nel database. Verifica la console.");
+      alert("Errore di salvataggio. Controlla le impostazioni RLS su Supabase come descritto.");
       console.error("Supabase Error:", errorText);
     }
   } catch(e) { 
-    console.error("Errore salvataggio:", e); 
-    alert("Errore di connessione al database.");
+    console.error("Errore connessione:", e); 
   }
 }
 
@@ -403,7 +392,7 @@ function popolaLista() {
       btnElimina.textContent = '🗑️';
       btnElimina.onclick = (e) => { 
         e.stopPropagation(); 
-        if(confirm("Sei sicuro di voler eliminare definitivamente questo teorema dal database?")) {
+        if(confirm("Procedere con l'eliminazione definitiva del record?")) {
             if(regolaSelezionataId === regola.id) regolaSelezionataId = null;
             eliminaDaDatabase(regola.id);
         }
@@ -494,7 +483,8 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
   for (let c = 0; c < 4; c++) {
     for (let p = 0; p < 13; p++) {
       const { x, y } = getCoordNodo(c, p);
-      const nomeNota = schemaCorde[c][p];
+      const nomeNotaCompleto = schemaCorde[c][p];
+      const nomeNotaSenzaOttava = nomeNotaCompleto.replace(/\d/g, '');
       const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p && String(r.id).startsWith('b'));
       const èAttiva = regolaTrovata && (regolaTrovata.id === attivaId);
       const èLive = notaEvidenziataLive && (notaEvidenziataLive.corda === c && notaEvidenziataLive.pos === p);
@@ -509,7 +499,7 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
       
       ctx.fillStyle = (èAttiva || èLive) ? "#ffffff" : "#222222";
       ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(nomeNota, x, y);
+      ctx.fillText(nomeNotaSenzaOttava, x, y);
     }
   }
 }
@@ -642,15 +632,14 @@ function disegnaPentagrammaCompositore() {
     ctxPentagramma.lineWidth = 1.5;
 
     if (elem.tipo === 'nota') {
-      const nomeNota = schemaCorde[elem.corda][elem.pos];
-      const yNote = getAltezzaUfficialePentagramma(nomeNota, rigoCorrente);
+      const nomeNotaCompleto = schemaCorde[elem.corda][elem.pos];
+      const nomeNotaSenzaOttava = nomeNotaCompleto.replace(/\d/g, '');
+      const yNote = getAltezzaUfficialePentagramma(nomeNotaCompleto, rigoCorrente);
       const baseYRigo = 20 + (rigoCorrente * 65);
 
-      // Tagli addizionali (Leger lines)
       if (yNote >= baseYRigo + 40) { for (let l = baseYRigo + 40; l <= yNote; l += 8) { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX - 7, l); ctxPentagramma.lineTo(offsetX + 7, l); ctxPentagramma.stroke(); } } 
       else if (yNote <= baseYRigo - 8) { for (let l = baseYRigo - 8; l >= yNote; l -= 8) { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX - 7, l); ctxPentagramma.lineTo(offsetX + 7, l); ctxPentagramma.stroke(); } }
 
-      // Disegno Testa della nota
       ctxPentagramma.beginPath();
       ctxPentagramma.ellipse(offsetX, yNote, 4.5, 3.5, -Math.PI/6, 0, Math.PI*2);
       
@@ -660,7 +649,6 @@ function disegnaPentagrammaCompositore() {
         ctxPentagramma.fill();
       }
 
-      // Gambo e Code
       if (elem.tipoNota !== 'semibreve') {
         const stemUp = yNote >= baseYRigo + 16;
         const stemX = stemUp ? offsetX + 4 : offsetX - 4;
@@ -671,7 +659,6 @@ function disegnaPentagrammaCompositore() {
         ctxPentagramma.lineTo(stemX, yNote + stemDir);
         ctxPentagramma.stroke();
 
-        // Disegno code (croma e semicroma)
         if (elem.tipoNota === 'croma' || elem.tipoNota === 'semicroma') {
           ctxPentagramma.beginPath();
           ctxPentagramma.moveTo(stemX, yNote + stemDir);
@@ -688,9 +675,8 @@ function disegnaPentagrammaCompositore() {
       }
 
       ctxPentagramma.font = "9px Arial"; ctxPentagramma.fillStyle = "#555"; 
-      ctxPentagramma.fillText(nomeNota, offsetX - 6, (rigoCorrente === 0 ? 62 : 127));
+      ctxPentagramma.fillText(nomeNotaSenzaOttava, offsetX - 6, (rigoCorrente === 0 ? 62 : 127));
       
-      // Calcolo spaziatura dinamica basata sulla durata
       let addSpace = 25;
       if (elem.tipoNota === 'semibreve') addSpace = 45;
       if (elem.tipoNota === 'minima') addSpace = 35;
@@ -705,7 +691,8 @@ function disegnaPentagrammaCompositore() {
 
   if (indiceNotaSelezionataCompositore !== null && sequenzaCompositoreCorrente[indiceNotaSelezionataCompositore]) {
     const elSel = sequenzaCompositoreCorrente[indiceNotaSelezionataCompositore];
-    document.getElementById('info-nota-selezionata').textContent = elSel.tipo === 'nota' ? `Nota: ${schemaCorde[elSel.corda][elSel.pos]} (${elSel.tipoNota})` : `Pausa`;
+    const n = elSel.tipo === 'nota' ? schemaCorde[elSel.corda][elSel.pos].replace(/\d/g, '') : '';
+    document.getElementById('info-nota-selezionata').textContent = elSel.tipo === 'nota' ? `Nota: ${n} (${elSel.tipoNota})` : `Pausa`;
     pannelloModificaNota.style.display = 'flex';
   } else { pannelloModificaNota.style.display = 'none'; }
 }
@@ -838,7 +825,6 @@ document.getElementById('btn-salva-teorema').onclick = () => {
   salvaInDatabase(nuovoTeorema, !!idTeoremaInModifica);
 };
 
-// Avvio Iniziale
 caricaDaDatabase();
 </script>
 </body>
