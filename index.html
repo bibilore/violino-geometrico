@@ -97,16 +97,16 @@
     width: 65%;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 15px 20px;
     justify-content: flex-start;
     align-items: center;
     overflow-y: auto;
   }
   
   h2.titolo-app {
-    margin: 0 0 15px 0;
+    margin: 0 0 10px 0;
     color: #2c3e50;
-    font-size: 1.4em;
+    font-size: 1.3em;
     align-self: flex-start;
   }
 
@@ -120,28 +120,27 @@
   }
   
   #riquadro-enunciato {
-    margin-top: 10px;
-    padding: 12px;
+    margin-top: 8px;
+    padding: 10px 12px;
     background: #fff;
     border-left: 5px solid #ccc;
     width: 90%;
-    min-height: 50px;
+    min-height: 40px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    font-size: 0.9em;
-    line-height: 1.4;
-    display: none;
+    font-size: 0.85em;
+    line-height: 1.3;
   }
 
   #pannello-compositore {
-    margin-top: 15px;
+    margin-top: 10px;
     background: #ffffff;
-    padding: 15px;
+    padding: 12px 15px;
     border-radius: 8px;
     width: 90%;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    display: none;
+    display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     box-sizing: border-box;
   }
   .compositore-campi {
@@ -149,14 +148,14 @@
     gap: 10px;
   }
   .compositore-campi input, .compositore-campi textarea {
-    padding: 6px 8px;
+    padding: 5px 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-family: inherit;
-    font-size: 0.9em;
+    font-size: 0.85em;
     box-sizing: border-box;
   }
-  .compositore-campi textarea { resize: vertical; height: 45px; }
+  .compositore-campi textarea { resize: vertical; height: 35px; }
 
   #canvasPentagrammaCompositore {
     background: #fafafa;
@@ -168,16 +167,16 @@
   .controlli-sequenziatore {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
     justify-content: center;
   }
   .btn-seq {
-    padding: 6px 10px;
+    padding: 5px 8px;
     border: none;
     border-radius: 4px;
     background: #3498db;
     color: white;
-    font-size: 0.8em;
+    font-size: 0.75em;
     cursor: pointer;
     font-weight: bold;
   }
@@ -197,33 +196,27 @@
 
 <div id="pannello-destro">
   <h2 class="titolo-app">🎻 Violino Geometrico — di Bianca Lorenzini</h2>
-  <canvas id="canvasViolino" width="950" height="300"></canvas>
-  <div id="riquadro-enunciato"></div>
+  <canvas id="canvasViolino" width="950" height="260"></canvas>
+  <div id="riquadro-enunciato"><strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.</div>
 
+  <!-- Pannello Spartito fisso e permanente nel layout -->
   <div id="pannello-compositore">
-    <h3 id="titolo-pannello-compositore" style="margin:0 0 5px 0; font-size:1.1em; color:#2c3e50;">Crea Nuovo Teorema Musicale</h3>
+    <h3 id="titolo-pannello-compositore" style="margin:0; font-size:1em; color:#2c3e50;">Spartito e Composizione Teoremi</h3>
     
-    <div class="compositore-campi">
+    <div class="compositore-campi" id="campi-salvataggio" style="display:none;">
       <div style="flex: 2;">
-        <label style="font-size:0.8em; font-weight:bold;">Titolo:</label>
-        <input type="text" id="input-titolo-teorema" placeholder="Es: Teorema della melodia geometrica" style="width:100%;">
+        <input type="text" id="input-titolo-teorema" placeholder="Titolo del Teorema..." style="width:100%;">
       </div>
-      <div style="flex: 1;">
-        <label style="font-size:0.8em; font-weight:bold;">Colore:</label><br>
-        <input type="color" id="input-colore-teorema" value="#8e44ad" style="height:28px; width:50px; padding:0; border:none; cursor:pointer;">
+      <div style="flex: 1; display:flex; align-items:center; gap:5px;">
+        <label style="font-size:0.75em; font-weight:bold;">Colore:</label>
+        <input type="color" id="input-colore-teorema" value="#8e44ad" style="height:26px; width:40px; padding:0; border:none; cursor:pointer;">
+      </div>
+      <div style="flex: 2;">
+        <input type="text" id="input-enunciato-teorema" placeholder="Enunciato..." style="width:100%;">
       </div>
     </div>
 
-    <div>
-      <label style="font-size:0.8em; font-weight:bold;">Enunciato:</label>
-      <textarea id="input-enunciato-teorema" placeholder="Descrivi l'enunciato associato..." style="width:100%;"></textarea>
-    </div>
-
-    <div style="font-size: 0.8em; color: #555; text-align:center;">
-      <i>componi lo spartito cliccando sulle note del violino oppure cliccando sui titoli a sinistra:</i>
-    </div>
-    
-    <canvas id="canvasPentagrammaCompositore" width="540" height="95"></canvas>
+    <canvas id="canvasPentagrammaCompositore" width="540" height="120"></canvas>
     
     <div class="controlli-sequenziatore">
       <button class="btn-seq" id="seq-pausa">⏸️ Pausa</button>
@@ -231,8 +224,8 @@
       <button class="btn-seq" id="seq-ascolta">▶️ Ascolta</button>
       <button class="btn-seq" id="seq-registra" style="background:#e67e22;">🔴 Registra & Scarica</button>
       <button class="btn-seq" id="seq-pulisci" style="background:#c0392b;">🗑️ Pulisci Tutto</button>
-      <button class="btn-seq" style="background:#95a5a6;" id="btn-chiudi-compositore">Annulla</button>
-      <button class="btn-seq" style="background:#27ae60;" id="btn-salva-teorema">Salva Teorema</button>
+      <button class="btn-seq" style="background:#27ae60; display:none;" id="btn-salva-teorema">💾 Salva Teorema</button>
+      <button class="btn-seq" style="background:#95a5a6; display:none;" id="btn-chiudi-compositore">Annulla</button>
     </div>
   </div>
 </div>
@@ -242,11 +235,11 @@ const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 let destinationStreamNode = null;
 let mediaRecorder = null;
-let registrazioniChunk = [];
 
 let oscillatoreCorrente = null;
 let gainCorrente = null;
 let timeoutChiusuraNota = null;
+let tempoInizioPressione = 0;
 
 function inizializzaAudioContext() {
   if (!audioCtx) {
@@ -332,6 +325,25 @@ const frequenzeBase = {
   "G": [196.00, 207.65, 220.00, 233.08, 246.94, 261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00]
 };
 
+function getAltezzaUfficialePentagramma(notaNome, rigoIndex = 0) {
+  const mappaNote = {
+    "G3": 45, "G#3": 45, "A3": 42, "A#3": 42, "B3": 39,
+    "C4": 36, "C#4": 36, "D4": 33, "D#4": 33, "E4": 30,
+    "F4": 27, "F#4": 27, "G4": 24, "G#4": 24, "A4": 21,
+    "A#4": 21, "B4": 18, "C5": 15, "C#5": 15, "D5": 12,
+    "D#5": 12, "E5": 9, "F5": 6, "F#5": 6, "G5": 3
+  };
+  const offsetBase = mappaNote[notaNome] !== undefined ? mappaNote[notaNome] : 21;
+  return offsetBase + (rigoIndex * 65);
+}
+
+function calcolaDurataEFigura(tempoMs) {
+  if (tempoMs < 350) return { tipoNota: 'croma', durataMs: 300 };
+  if (tempoMs < 900) return { tipoNota: 'semiminima', durataMs: 550 };
+  if (tempoMs < 1600) return { tipoNota: 'minima', durataMs: 1000 };
+  return { tipoNota: 'semibreve', durataMs: 1600 };
+}
+
 const regoleBase = [
   { corda: 3, pos: 0, titolo: "Definizione di triangolo", enunciato: "Un triangolo è un insieme di punti del piano costituito da una poligonale chiusa di tre lati e dai suoi punti interni.", colore: "#e74c3c" },
   { corda: 3, pos: 1, titolo: "Classificazione dei triangoli rispetto ai lati", enunciato: "Un triangolo è equilatero se ha i tre lati congruenti; è isoscele se ha due lati congruenti; è scaleno se ha i tre lati fra loro non congruenti.", colore: "#e67e22" },
@@ -398,14 +410,16 @@ let sequenzaCompositoreCorrente = [];
 let indiceNotaSelezionataCompositore = null;
 let indiceInRiproduzioneCompositore = null;
 let indiceTeoremaInModifica = null;
+let nodoPremutoCorrente = null;
+let inModalitaCreazioneNuovo = false;
 
 function getCoordNodo(corda, pos) {
   const xStart = 80;
   const xEnd = 900;
   const passoX = (xEnd - xStart) / 12;
   const x = xStart + pos * passoX;
-  const yStart = 50;
-  const yEnd = 250;
+  const yStart = 45;
+  const yEnd = 215;
   const y = yStart + (yEnd - yStart) * (corda / 3);
   return { x, y };
 }
@@ -414,13 +428,13 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = "#1e1e1e";
-  ctx.fillRect(50, 30, 880, 240);
+  ctx.fillRect(50, 25, 880, 210);
 
   ctx.fillStyle = "#2c2c2c";
-  ctx.fillRect(50, 30, 20, 240);
+  ctx.fillRect(50, 25, 20, 210);
 
   for (let c = 0; c < 4; c++) {
-    const y = 50 + (200 / 3) * c;
+    const y = 45 + (170 / 3) * c;
     ctx.beginPath();
     ctx.moveTo(50, y);
     ctx.lineTo(930, y);
@@ -439,7 +453,7 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
       const èLive = notaEvidenziataLive && (notaEvidenziataLive.corda === c && notaEvidenziataLive.pos === p);
 
       ctx.beginPath();
-      ctx.arc(x, y, 13, 0, Math.PI * 2);
+      ctx.arc(x, y, 12, 0, Math.PI * 2);
       
       if (èLive) {
         ctx.fillStyle = "#e74c3c";
@@ -462,7 +476,7 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
       ctx.stroke();
 
       ctx.fillStyle = (èAttiva || èLive) ? "#ffffff" : "#222222";
-      ctx.font = "bold 11px Arial";
+      ctx.font = "bold 10px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(nomeNota, x, y);
@@ -514,7 +528,7 @@ function popolaLista() {
     spanTesto.addEventListener('mouseenter', () => {
       if (regolaSelezionataId !== regola.id) {
         enunciatoEl.style.display = 'block';
-        enunciatoEl.innerHTML = `<strong>${regola.titolo}</strong><br><br>${regola.enunciato}`;
+        enunciatoEl.innerHTML = `<strong>${regola.titolo}</strong><br>${regola.enunciato}`;
         enunciatoEl.style.borderLeftColor = regola.colore;
         DisegnaTastiera(regola.id);
       }
@@ -522,7 +536,10 @@ function popolaLista() {
 
     spanTesto.addEventListener('mouseleave', () => {
       if (regolaSelezionataId !== regola.id) {
-        enunciatoEl.style.display = 'none';
+        if (!regolaSelezionataId) {
+          enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.`;
+          enunciatoEl.style.borderLeftColor = "#ccc";
+        }
         DisegnaTastiera(regolaSelezionataId);
         elementiLista.forEach(el => el.classList.remove('attiva'));
         if (regolaSelezionataId) elementiLista[regolaSelezionataId - 1].classList.add('attiva');
@@ -535,31 +552,30 @@ function popolaLista() {
       li.classList.add('attiva');
       
       enunciatoEl.style.display = 'block';
-      enunciatoEl.innerHTML = `<strong>${regola.titolo}</strong><br><br>${regola.enunciato}`;
+      enunciatoEl.innerHTML = `<strong>${regola.titolo}</strong><br>${regola.enunciato}`;
       enunciatoEl.style.borderLeftColor = regola.colore;
 
       DisegnaTastiera(regola.id);
 
-      const pannelloCompositore = document.getElementById('pannello-compositore');
-      if (pannelloCompositore.style.display === 'flex') {
-        // Se il compositore è aperto, aggiunge la sinfonia o la nota del teorema direttamente nello spartito!
+      if (inModalitaCreazioneNuovo) {
         if (regola.sequenza && regola.sequenza.length > 0) {
           regola.sequenza.forEach(item => {
-            sequenzaCompositoreCorrente.push({...item});
+            if (sequenzaCompositoreCorrente.length < 50) sequenzaCompositoreCorrente.push({...item});
           });
         } else if (regola.corda !== undefined && regola.pos !== undefined) {
-          if (indiceNotaSelezionataCompositore !== null) {
-            sequenzaCompositoreCorrente[indiceNotaSelezionataCompositore] = { tipo: 'nota', corda: regola.corda, pos: regola.pos, durata: 'semiminima' };
-            indiceNotaSelezionataCompositore = null;
-          } else {
-            sequenzaCompositoreCorrente.push({ tipo: 'nota', corda: regola.corda, pos: regola.pos, durata: 'semiminima' });
+          if (sequenzaCompositoreCorrente.length < 50) {
+            sequenzaCompositoreCorrente.push({ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 550 });
           }
         }
         disegnaPentagrammaCompositore();
       } else {
         if (regola.sequenza && regola.sequenza.length > 0) {
+          sequenzaCompositoreCorrente = [...regola.sequenza];
+          disegnaPentagrammaCompositore();
           riproduciSequenzaTeorema(regola);
         } else if (regola.corda !== undefined && regola.pos !== undefined) {
+          sequenzaCompositoreCorrente = [{ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 550 }];
+          disegnaPentagrammaCompositore();
           const nomeCordaChiave = ["E", "A", "D", "G"][regola.corda];
           avviaNota(frequenzeBase[nomeCordaChiave][regola.pos]);
         }
@@ -567,7 +583,7 @@ function popolaLista() {
     });
 
     spanTesto.addEventListener('mouseup', () => {
-      fermaNota();
+      if (!inModalitaCreazioneNuovo) fermaNota();
     });
   });
 }
@@ -583,7 +599,7 @@ canvas.addEventListener('mousemove', (e) => {
   for (let c = 0; c < 4; c++) {
     for (let p = 0; p < 13; p++) {
       const { x, y } = getCoordNodo(c, p);
-      if (Math.hypot(mouseX - x, mouseY - y) <= 13) {
+      if (Math.hypot(mouseX - x, mouseY - y) <= 12) {
         trovatoHover = { corda: c, pos: p };
         break;
       }
@@ -598,19 +614,23 @@ canvas.addEventListener('mousemove', (e) => {
     const regolaTrovata = regoleGeometria.find(r => r.corda === trovatoHover.corda && r.pos === trovatoHover.pos);
     if (regolaTrovata) {
       enunciatoEl.style.display = 'block';
-      enunciatoEl.innerHTML = `<strong>${regolaTrovata.titolo}</strong><br><br>${regolaTrovata.enunciato}`;
+      enunciatoEl.innerHTML = `<strong>${regolaTrovata.titolo}</strong><br>${regolaTrovata.enunciato}`;
       enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
       elementiLista[regolaTrovata.id - 1].classList.add('attiva');
       DisegnaTastiera(regolaTrovata.id);
     } else {
-      enunciatoEl.style.display = 'none';
+      if (!regolaSelezionataId) {
+        enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.`;
+        enunciatoEl.style.borderLeftColor = "#ccc";
+      }
       DisegnaTastiera(regolaSelezionataId);
       if (regolaSelezionataId) elementiLista[regolaSelezionataId - 1].classList.add('attiva');
     }
   } else {
     canvas.style.cursor = 'default';
     if (!regolaSelezionataId) {
-      enunciatoEl.style.display = 'none';
+      enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.`;
+      enunciatoEl.style.borderLeftColor = "#ccc";
       DisegnaTastiera();
     } else {
       DisegnaTastiera(regolaSelezionataId);
@@ -626,7 +646,8 @@ canvas.addEventListener('mouseleave', () => {
     elementiLista[regolaSelezionataId - 1].classList.add('attiva');
     DisegnaTastiera(regolaSelezionataId);
   } else {
-    enunciatoEl.style.display = 'none';
+    enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong><br>Seleziona un teorema a sinistra o suona i nodi del violino.`;
+    enunciatoEl.style.borderLeftColor = "#ccc";
     DisegnaTastiera();
   }
 });
@@ -641,32 +662,13 @@ canvas.addEventListener('mousedown', (e) => {
   for (let c = 0; c < 4; c++) {
     for (let p = 0; p < 13; p++) {
       const { x, y } = getCoordNodo(c, p);
-      if (Math.hypot(mouseX - x, mouseY - y) <= 13) {
+      if (Math.hypot(mouseX - x, mouseY - y) <= 12) {
         const nomeCordaChiave = ["E", "A", "D", "G"][c];
         const freq = frequenzeBase[nomeCordaChiave][p];
         avviaNota(freq);
-
-        const pannelloCompositore = document.getElementById('pannello-compositore');
-        if (pannelloCompositore.style.display === 'flex') {
-          if (indiceNotaSelezionataCompositore !== null) {
-            sequenzaCompositoreCorrente[indiceNotaSelezionataCompositore] = { tipo: 'nota', corda: c, pos: p, durata: 'semiminima' };
-            indiceNotaSelezionataCompositore = null;
-          } else {
-            sequenzaCompositoreCorrente.push({ tipo: 'nota', corda: c, pos: p, durata: 'semiminima' });
-          }
-          disegnaPentagrammaCompositore();
-        } else {
-          const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p);
-          if (regolaTrovata) {
-            elementiLista.forEach(el => el.classList.remove('attiva'));
-            regolaSelezionataId = regolaTrovata.id;
-            elementiLista[regolaSelezionataId - 1].classList.add('attiva');
-            enunciatoEl.style.display = 'block';
-            enunciatoEl.innerHTML = `<strong>${regolaTrovata.titolo}</strong><br><br>${regolaTrovata.enunciato}`;
-            enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
-            DisegnaTastiera(regolaTrovata.id);
-          }
-        }
+        
+        tempoInizioPressione = Date.now();
+        nodoPremutoCorrente = { corda: c, pos: p };
         return;
       }
     }
@@ -674,6 +676,50 @@ canvas.addEventListener('mousedown', (e) => {
 });
 
 window.addEventListener('mouseup', () => {
+  if (nodoPremutoCorrente !== null) {
+    const tempoFine = Date.now();
+    const durataPressione = tempoFine - tempoInizioPressione;
+    const infoNota = calcolaDurataEFigura(durataPressione);
+
+    const c = nodoPremutoCorrente.corda;
+    const p = nodoPremutoCorrente.pos;
+
+    if (inModalitaCreazioneNuovo) {
+      if (sequenzaCompositoreCorrente.length < 50) {
+        if (indiceNotaSelezionataCompositore !== null) {
+          sequenzaCompositoreCorrente[indiceNotaSelezionataCompositore] = { 
+            tipo: 'nota', corda: c, pos: p, 
+            tipoNota: infoNota.tipoNota, durataMs: infoNota.durataMs 
+          };
+          indiceNotaSelezionataCompositore = null;
+        } else {
+          sequenzaCompositoreCorrente.push({ 
+            tipo: 'nota', corda: c, pos: p, 
+            tipoNota: infoNota.tipoNota, durataMs: infoNota.durataMs 
+          });
+        }
+        disegnaPentagrammaCompositore();
+      } else {
+        alert("Hai raggiunto il limite massimo di 50 note per questo teorema!");
+      }
+    } else {
+      // Modalità normale: suona e mostra in tempo reale
+      sequenzaCompositoreCorrente = [{ tipo: 'nota', corda: c, pos: p, tipoNota: infoNota.tipoNota, durataMs: infoNota.durataMs }];
+      disegnaPentagrammaCompositore();
+
+      const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p);
+      if (regolaTrovata) {
+        elementiLista.forEach(el => el.classList.remove('attiva'));
+        regolaSelezionataId = regolaTrovata.id;
+        elementiLista[regolaSelezionataId - 1].classList.add('attiva');
+        enunciatoEl.style.display = 'block';
+        enunciatoEl.innerHTML = `<strong>${regolaTrovata.titolo}</strong><br>${regolaTrovata.enunciato}`;
+        enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
+        DisegnaTastiera(regolaTrovata.id);
+      }
+    }
+    nodoPremutoCorrente = null;
+  }
   fermaNota();
 });
 
@@ -684,22 +730,33 @@ function disegnaPentagrammaCompositore() {
   if (!ctxPentagrammaCompositore) return;
   ctxPentagrammaCompositore.clearRect(0, 0, canvasPentagrammaCompositore.width, canvasPentagrammaCompositore.height);
 
-  const lineeY = [25, 35, 45, 55, 65];
-  lineeY.forEach(y => {
-    ctxPentagrammaCompositore.beginPath();
-    ctxPentagrammaCompositore.moveTo(35, y);
-    ctxPentagrammaCompositore.lineTo(520, y);
-    ctxPentagrammaCompositore.strokeStyle = "#888";
-    ctxPentagrammaCompositore.stroke();
-  });
+  // Disegno fino a 2 righe di pentagramma per supportare fino a 50+ note
+  for (let rigo = 0; rigo < 2; rigo++) {
+    const baseY = 20 + (rigo * 65);
+    const lineeY = [baseY, baseY + 8, baseY + 16, baseY + 24, baseY + 32];
+    lineeY.forEach(y => {
+      ctxPentagrammaCompositore.beginPath();
+      ctxPentagrammaCompositore.moveTo(30, y);
+      ctxPentagrammaCompositore.lineTo(525, y);
+      ctxPentagrammaCompositore.strokeStyle = "#888";
+      ctxPentagrammaCompositore.stroke();
+    });
 
-  ctxPentagrammaCompositore.fillStyle = "#222";
-  ctxPentagrammaCompositore.font = "bold 24px Arial";
-  ctxPentagrammaCompositore.fillText("𝄞", 8, 57);
+    ctxPentagrammaCompositore.fillStyle = "#222";
+    ctxPentagrammaCompositore.font = "bold 20px Arial";
+    ctxPentagrammaCompositore.fillText("𝄞", 6, baseY + 26);
+  }
 
-  let offsetX = 60;
+  let offsetX = 55;
+  let rigoCorrente = 0;
+  let noteNelRigo = 0;
+
   sequenzaCompositoreCorrente.forEach((elem, index) => {
-    if (offsetX > 500) offsetX = 60;
+    if (noteNelRigo >= 20) {
+      rigoCorrente = 1;
+      offsetX = 55;
+      noteNelRigo = 0;
+    }
 
     const isSelezionata = (indiceNotaSelezionataCompositore === index);
     const isRiproduzione = (indiceInRiproduzioneCompositore === index);
@@ -708,39 +765,46 @@ function disegnaPentagrammaCompositore() {
     ctxPentagrammaCompositore.strokeStyle = isRiproduzione ? "#e74c3c" : (isSelezionata ? "#2980b9" : "#222");
 
     if (elem.tipo === 'nota') {
-      const yNote = 70 - (elem.corda * 9 + elem.pos * 1.1); 
+      const nomeNota = schemaCorde[elem.corda][elem.pos];
+      const yNote = getAltezzaUfficialePentagramma(nomeNota, rigoCorrente);
       
       ctxPentagrammaCompositore.beginPath();
-      ctxPentagrammaCompositore.arc(offsetX, yNote, 4.5, 0, Math.PI * 2);
+      ctxPentagrammaCompositore.arc(offsetX, yNote, 3.5, 0, Math.PI * 2);
+      if (elem.tipoNota === 'minima' || elem.tipoNota === 'semibreve') {
+        ctxPentagrammaCompositore.fillStyle = "#fafafa";
+        ctxPentagrammaCompositore.fill();
+        ctxPentagrammaCompositore.fillStyle = isRiproduzione ? "#e74c3c" : (isSelezionata ? "#2980b9" : "#222");
+      }
       ctxPentagrammaCompositore.fill();
 
-      ctxPentagrammaCompositore.beginPath();
-      ctxPentagrammaCompositore.moveTo(offsetX + 4.5, yNote);
-      ctxPentagrammaCompositore.lineTo(offsetX + 4.5, yNote - 20);
-      ctxPentagrammaCompositore.stroke();
+      if (elem.tipoNota !== 'semibreve') {
+        ctxPentagrammaCompositore.beginPath();
+        ctxPentagrammaCompositore.moveTo(offsetX + 3.5, yNote);
+        ctxPentagrammaCompositore.lineTo(offsetX + 3.5, yNote - 18);
+        ctxPentagrammaCompositore.stroke();
+      }
 
-      ctxPentagrammaCompositore.font = "8px Arial";
+      ctxPentagrammaCompositore.font = "7px Arial";
       ctxPentagrammaCompositore.fillStyle = "#555";
-      ctxPentagrammaCompositore.fillText(schemaCorde[elem.corda][elem.pos], offsetX - 6, 85);
+      ctxPentagrammaCompositore.fillText(nomeNota, offsetX - 5, (rigoCorrente === 0 ? 58 : 123));
     } else if (elem.tipo === 'pausa') {
-      ctxPentagrammaCompositore.font = "bold 13px Arial";
-      ctxPentagrammaCompositore.fillText("𝄾", offsetX - 4, 48);
-      ctxPentagrammaCompositore.font = "8px Arial";
-      ctxPentagrammaCompositore.fillText("pausa", offsetX - 8, 85);
+      ctxPentagrammaCompositore.font = "bold 11px Arial";
+      ctxPentagrammaCompositore.fillText("𝄾", offsetX - 3, (rigoCorrente === 0 ? 38 : 103));
     }
 
-    offsetX += 30;
+    offsetX += 23;
+    noteNelRigo++;
   });
 }
 
 canvasPentagrammaCompositore.onclick = (e) => {
   const rect = canvasPentagrammaCompositore.getBoundingClientRect();
   const clickX = e.clientX - rect.left;
-  let currX = 60;
+  let currX = 55;
   let indiceTrovato = null;
   sequenzaCompositoreCorrente.forEach((_, idx) => {
-    if (Math.abs(clickX - currX) < 15) indiceTrovato = idx;
-    currX += 30;
+    if (Math.abs(clickX - currX) < 12) indiceTrovato = idx;
+    currX += 23;
   });
   if (indiceTrovato !== null) {
     indiceNotaSelezionataCompositore = indiceTrovato;
@@ -749,8 +813,10 @@ canvasPentagrammaCompositore.onclick = (e) => {
 };
 
 document.getElementById('seq-pausa').onclick = () => {
-  sequenzaCompositoreCorrente.push({ tipo: 'pausa', durata: 'semiminima' });
-  disegnaPentagrammaCompositore();
+  if (sequenzaCompositoreCorrente.length < 50) {
+    sequenzaCompositoreCorrente.push({ tipo: 'pausa', tipoNota: 'semiminima', durataMs: 500 });
+    disegnaPentagrammaCompositore();
+  }
 };
 
 document.getElementById('seq-pulisci').onclick = () => {
@@ -795,6 +861,8 @@ function riproduciSequenzaCompositore() {
     disegnaPentagrammaCompositore();
 
     const elem = sequenzaCompositoreCorrente[i];
+    const tempoAttesa = elem.durataMs ? elem.durataMs : 500;
+
     if (elem.tipo === 'nota') {
       const nomeCordaChiave = ["E", "A", "D", "G"][elem.corda];
       const freq = frequenzeBase[nomeCordaChiave][elem.pos];
@@ -803,14 +871,14 @@ function riproduciSequenzaCompositore() {
       setTimeout(() => {
         fermaNota();
         i++;
-        setTimeout(suonaProssima, 120);
-      }, 450);
+        setTimeout(suonaProssima, 100);
+      }, tempoAttesa);
     } else {
       DisegnaTastiera();
       setTimeout(() => {
         i++;
         suonaProssima();
-      }, 450);
+      }, tempoAttesa);
     }
   }
   suonaProssima();
@@ -864,6 +932,8 @@ function avviaRegistrazioneEScaricaCompositore() {
     disegnaPentagrammaCompositore();
 
     const elem = sequenzaCompositoreCorrente[i];
+    const tempoAttesa = elem.durataMs ? elem.durataMs : 500;
+
     if (elem.tipo === 'nota') {
       const nomeCordaChiave = ["E", "A", "D", "G"][elem.corda];
       const freq = frequenzeBase[nomeCordaChiave][elem.pos];
@@ -872,14 +942,14 @@ function avviaRegistrazioneEScaricaCompositore() {
       setTimeout(() => {
         fermaNota();
         i++;
-        setTimeout(suonaEregistra, 120);
-      }, 450);
+        setTimeout(suonaEregistra, 100);
+      }, tempoAttesa);
     } else {
       DisegnaTastiera();
       setTimeout(() => {
         i++;
         suonaEregistra();
-      }, 450);
+      }, tempoAttesa);
     }
   }
   suonaEregistra();
@@ -893,6 +963,8 @@ function riproduciSequenzaTeorema(regola) {
       return;
     }
     const elem = regola.sequenza[i];
+    const tempoAttesa = elem.durataMs ? elem.durataMs : 500;
+
     if (elem.tipo === 'nota') {
       const nomeCordaChiave = ["E", "A", "D", "G"][elem.corda];
       const freq = frequenzeBase[nomeCordaChiave][elem.pos];
@@ -901,57 +973,73 @@ function riproduciSequenzaTeorema(regola) {
       setTimeout(() => {
         fermaNota();
         i++;
-        setTimeout(suonaProssima, 120);
-      }, 450);
+        setTimeout(suonaProssima, 100);
+      }, tempoAttesa);
     } else {
       setTimeout(() => {
         i++;
         suonaProssima();
-      }, 450);
+      }, tempoAttesa);
     }
   }
   suonaProssima();
 }
 
-const pannelloCompositore = document.getElementById('pannello-compositore');
+const titoloPannelloCompositore = document.getElementById('titolo-pannello-compositore');
+const campiSalvataggio = document.getElementById('campi-salvataggio');
 const inputTitolo = document.getElementById('input-titolo-teorema');
 const inputEnunciato = document.getElementById('input-enunciato-teorema');
 const inputColore = document.getElementById('input-colore-teorema');
-const titoloPannelloCompositore = document.getElementById('titolo-pannello-compositore');
+const btnSalvaTeorema = document.getElementById('btn-salva-teorema');
+const btnChiudiCompositore = document.getElementById('btn-chiudi-compositore');
 const btnNuovoTeorema = document.getElementById('btn-nuovo-teorema');
 
 btnNuovoTeorema.onclick = () => {
+  inModalitaCreazioneNuovo = true;
   indiceTeoremaInModifica = null;
-  titoloPannelloCompositore.textContent = "Crea Nuovo Teorema Musicale";
+  titoloPannelloCompositore.textContent = "Componi e Salva Nuovo Teorema";
+  campiSalvataggio.style.display = 'flex';
+  btnSalvaTeorema.style.display = 'inline-block';
+  btnChiudiCompositore.style.display = 'inline-block';
+  
   inputTitolo.value = "";
   inputEnunciato.value = "";
   inputColore.value = "#8e44ad";
   sequenzaCompositoreCorrente = [];
   indiceNotaSelezionataCompositore = null;
-  
-  pannelloCompositore.style.display = 'flex';
   disegnaPentagrammaCompositore();
 };
 
-document.getElementById('btn-chiudi-compositore').onclick = () => {
-  pannelloCompositore.style.display = 'none';
+btnChiudiCompositore.onclick = () => {
+  inModalitaCreazioneNuovo = false;
+  titoloPannelloCompositore.textContent = "Spartito e Composizione Teoremi";
+  campiSalvataggio.style.display = 'none';
+  btnSalvaTeorema.style.display = 'none';
+  btnChiudiCompositore.style.display = 'none';
+  sequenzaCompositoreCorrente = [];
+  disegnaPentagrammaCompositore();
 };
 
 function apriCompositoreModifica(indexCustom) {
+  inModalitaCreazioneNuovo = true;
   indiceTeoremaInModifica = indexCustom;
   const teorema = teoremiCustom[indexCustom];
+  
   titoloPannelloCompositore.textContent = "Modifica Teorema Musicale";
+  campiSalvataggio.style.display = 'flex';
+  btnSalvaTeorema.style.display = 'inline-block';
+  btnChiudiCompositore.style.display = 'inline-block';
+
   inputTitolo.value = teorema.titolo;
   inputEnunciato.value = teorema.enunciato;
   inputColore.value = teorema.colore || "#8e44ad";
   sequenzaCompositoreCorrente = teorema.sequenza ? [...teorema.sequenza] : [];
   indiceNotaSelezionataCompositore = null;
   
-  pannelloCompositore.style.display = 'flex';
   disegnaPentagrammaCompositore();
 }
 
-document.getElementById('btn-salva-teorema').onclick = () => {
+btnSalvaTeorema.onclick = () => {
   const titolo = inputTitolo.value.trim() || "Teorema Musicale Personalizzato";
   const enunciato = inputEnunciato.value.trim() || "Nessun enunciato fornito.";
   const colore = inputColore.value;
@@ -972,7 +1060,12 @@ document.getElementById('btn-salva-teorema').onclick = () => {
   salvaTeoremiCustomNellUrl();
   regoleGeometria = [...regoleBase, ...teoremiCustom];
   popolaLista();
-  pannelloCompositore.style.display = 'none';
+
+  inModalitaCreazioneNuovo = false;
+  titoloPannelloCompositore.textContent = "Spartito e Composizione Teoremi";
+  campiSalvataggio.style.display = 'none';
+  btnSalvaTeorema.style.display = 'none';
+  btnChiudiCompositore.style.display = 'none';
   DisegnaTastiera();
 };
 
@@ -983,11 +1076,14 @@ function eliminaTeorema(indexCustom) {
     regoleGeometria = [...regoleBase, ...teoremiCustom];
     popolaLista();
     DisegnaTastiera();
+    sequenzaCompositoreCorrente = [];
+    disegnaPentagrammaCompositore();
   }
 }
 
 popolaLista();
 DisegnaTastiera();
+disegnaPentagrammaCompositore();
 </script>
 
 </body>
