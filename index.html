@@ -110,18 +110,19 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const headers = {
   'Content-Type': 'application/json',
   'apikey': SUPABASE_ANON_KEY,
-  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+  'Prefer': 'return=representation'
 };
 
 // ==========================================
-// AUDIO CONTEXT E REGISTRAZIONE
+// MOTORE AUDIO: ACUSTICA AVANZATA VIOLINO
 // ==========================================
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 let destinationStreamNode = null;
 let mediaRecorder = null;
-let oscillatoreCorrente = null;
-let gainCorrente = null;
+
+let nodoAudioCorrente = { osc: null, filter: null, lfo: null, lfoGain: null, gain: null };
 let timeoutChiusuraNota = null;
 
 function inizializzaAudioContext() {
@@ -139,55 +140,83 @@ function avviaNota(frequenza) {
   fermaNotaImmediata();
 
   try {
-    oscillatoreCorrente = audioCtx.createOscillator();
-    gainCorrente = audioCtx.createGain();
+    const osc = audioCtx.createOscillator();
+    const filter = audioCtx.createBiquadFilter();
+    const lfo = audioCtx.createOscillator();
+    const lfoGain = audioCtx.createGain();
+    const gain = audioCtx.createGain();
     
-    oscillatoreCorrente.type = 'sawtooth';
-    oscillatoreCorrente.frequency.setValueAtTime(frequenza, audioCtx.currentTime);
-    
-    gainCorrente.gain.setValueAtTime(0, audioCtx.currentTime);
-    gainCorrente.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + 0.05);
-    
-    oscillatoreCorrente.connect(gainCorrente);
-    gainCorrente.connect(audioCtx.destination);
-    if (destinationStreamNode) gainCorrente.connect(destinationStreamNode);
-    
-    oscillatoreCorrente.start();
+    // Generatore forma d'onda base (dente di sega per archi)
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(frequenza, audioCtx.currentTime);
 
-    setTimeout(() => {
-      if (oscillatoreCorrente) fermaNota();
-    }, 4000);
+    // Filtro Passa-Basso per simulare la cassa armonica in legno (taglia le frequenze troppo stridenti)
+    filter.type = 'lowpass';
+    filter.frequency.value = frequenza * 2.2; 
+    filter.Q.value = 1.2;
+
+    // LFO per il Vibrato (circa 5.5 Hz)
+    lfo.type = 'sine';
+    lfo.frequency.value = 5.5;
+    lfoGain.gain.value = frequenza * 0.015; // Profondità del vibrato proporzionale all'altezza
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+
+    // Inviluppo ADSR (Morbido per simulare l'archetto)
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.4, audioCtx.currentTime + 0.08); // Attack
+    gain.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + 0.3); // Decay
+    
+    // Connessioni
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    if (destinationStreamNode) gain.connect(destinationStreamNode);
+    
+    osc.start();
+    lfo.start();
+
+    nodoAudioCorrente = { osc, filter, lfo, lfoGain, gain };
+
+    timeoutChiusuraNota = setTimeout(() => { fermaNota(); }, 4000);
   } catch (e) { console.error(e); }
 }
 
 function fermaNota() {
-  if (oscillatoreCorrente && gainCorrente && audioCtx) {
+  if (nodoAudioCorrente.osc && nodoAudioCorrente.gain && audioCtx) {
     if (timeoutChiusuraNota) clearTimeout(timeoutChiusuraNota);
     const tempoAttuale = audioCtx.currentTime;
     try {
-      gainCorrente.gain.setValueAtTime(gainCorrente.gain.value, tempoAttuale);
-      gainCorrente.gain.linearRampToValueAtTime(0.0001, tempoAttuale + 0.2);
+      nodoAudioCorrente.gain.gain.cancelScheduledValues(tempoAttuale);
+      nodoAudioCorrente.gain.gain.setValueAtTime(nodoAudioCorrente.gain.gain.value, tempoAttuale);
+      nodoAudioCorrente.gain.gain.exponentialRampToValueAtTime(0.0001, tempoAttuale + 0.3); // Release sfumata
     } catch(e) {}
     
-    const oscDaChiudere = oscillatoreCorrente;
-    const gainDaChiudere = gainCorrente;
+    const nodiDaChiudere = { ...nodoAudioCorrente };
     timeoutChiusuraNota = setTimeout(() => { 
-      try { oscDaChiudere.stop(); oscDaChiudere.disconnect(); gainDaChiudere.disconnect(); } catch(e) {} 
-    }, 250);
-  } else {
-    fermaNotaImmediata();
+      try { 
+        nodiDaChiudere.osc.stop(); 
+        nodiDaChiudere.lfo.stop();
+        nodiDaChiudere.osc.disconnect(); 
+        nodiDaChiudere.filter.disconnect();
+        nodiDaChiudere.lfo.disconnect();
+        nodiDaChiudere.lfoGain.disconnect();
+        nodiDaChiudere.gain.disconnect(); 
+      } catch(e) {} 
+    }, 350);
   }
-  oscillatoreCorrente = null;
-  gainCorrente = null;
+  nodoAudioCorrente = { osc: null, filter: null, lfo: null, lfoGain: null, gain: null };
 }
 
 function fermaNotaImmediata() {
   if (timeoutChiusuraNota) clearTimeout(timeoutChiusuraNota);
-  if (oscillatoreCorrente) {
-    try { oscillatoreCorrente.stop(); oscillatoreCorrente.disconnect(); } catch(e) {}
+  if (nodoAudioCorrente.osc) {
+    try { 
+      nodoAudioCorrente.osc.stop(); nodoAudioCorrente.lfo.stop();
+      nodoAudioCorrente.osc.disconnect(); nodoAudioCorrente.gain.disconnect(); 
+    } catch(e) {}
   }
-  oscillatoreCorrente = null;
-  gainCorrente = null;
+  nodoAudioCorrente = { osc: null, filter: null, lfo: null, lfoGain: null, gain: null };
 }
 
 // ==========================================
@@ -214,11 +243,11 @@ function getAltezzaUfficialePentagramma(notaNome, rigoIndex = 0) {
 }
 
 function calcolaDurataEFigura(tempoMs) {
-  if (tempoMs < 200) return { tipoNota: 'semicroma', durataMs: 150 };
-  if (tempoMs < 450) return { tipoNota: 'croma', durataMs: 300 };
-  if (tempoMs < 950) return { tipoNota: 'semiminima', durataMs: 600 };
-  if (tempoMs < 1600) return { tipoNota: 'minima', durataMs: 1100 };
-  return { tipoNota: 'semibreve', durataMs: 1800 };
+  if (tempoMs <= 250) return { tipoNota: 'semicroma', durataMs: 250 };
+  if (tempoMs <= 450) return { tipoNota: 'croma', durataMs: 450 };
+  if (tempoMs <= 800) return { tipoNota: 'semiminima', durataMs: 800 };
+  if (tempoMs <= 1400) return { tipoNota: 'minima', durataMs: 1400 };
+  return { tipoNota: 'semibreve', durataMs: 2000 };
 }
 
 // ==========================================
@@ -261,7 +290,7 @@ let teoremiCustom = [];
 let regoleGeometria = [...regoleBase];
 
 // ==========================================
-// SUPABASE FETCH / SAVE / DELETE
+// SUPABASE API (Rigorosa e blindata)
 // ==========================================
 async function caricaDaDatabase() {
   try {
@@ -282,15 +311,33 @@ async function salvaInDatabase(teorema, isUpdate = false) {
   const url = isUpdate ? `${SUPABASE_URL}/rest/v1/teoremi_custom?id=eq.${teorema.id}` : `${SUPABASE_URL}/rest/v1/teoremi_custom`;
   const method = isUpdate ? 'PATCH' : 'POST';
   
+  // Rimuovo l'id per evitare conflitti con la generazione automatica (UUID) nel POST
+  const payload = {
+    titolo: teorema.titolo,
+    enunciato: teorema.enunciato,
+    colore: teorema.colore,
+    sequenza: teorema.sequenza
+  };
+
   try {
-    const res = await fetch(url, { method, headers, body: JSON.stringify(teorema) });
+    const res = await fetch(url, { 
+      method, 
+      headers, 
+      body: JSON.stringify(payload) 
+    });
+    
     if(res.ok) {
       chiudiCompositore();
       await caricaDaDatabase();
     } else {
-      alert("Errore durante il salvataggio nel database.");
+      const errorText = await res.text();
+      alert("Errore durante il salvataggio nel database. Verifica la console.");
+      console.error("Supabase Error:", errorText);
     }
-  } catch(e) { console.error("Errore salvataggio:", e); }
+  } catch(e) { 
+    console.error("Errore salvataggio:", e); 
+    alert("Errore di connessione al database.");
+  }
 }
 
 async function eliminaDaDatabase(id) {
@@ -319,7 +366,6 @@ let nodoPremutoCorrente = null;
 let inModalitaCreazioneNuovo = false;
 let tempoInizioPressione = 0;
 
-// Evitiamo attacchi XSS
 function DOMPurify(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -403,7 +449,7 @@ function popolaLista() {
         if (regola.sequenza && regola.sequenza.length > 0) {
           regola.sequenza.forEach(item => { if (sequenzaCompositoreCorrente.length < 50) sequenzaCompositoreCorrente.push({...item}); });
         } else if (regola.corda !== undefined && regola.pos !== undefined) {
-          if (sequenzaCompositoreCorrente.length < 50) sequenzaCompositoreCorrente.push({ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 600 });
+          if (sequenzaCompositoreCorrente.length < 50) sequenzaCompositoreCorrente.push({ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 800 });
         }
         disegnaPentagrammaCompositore();
       } else {
@@ -412,7 +458,7 @@ function popolaLista() {
           disegnaPentagrammaCompositore();
           riproduciSequenzaTeorema(regola);
         } else if (regola.corda !== undefined && regola.pos !== undefined) {
-          sequenzaCompositoreCorrente = [{ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 600 }];
+          sequenzaCompositoreCorrente = [{ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 800 }];
           disegnaPentagrammaCompositore();
           const nomeCordaChiave = ["E", "A", "D", "G"][regola.corda];
           avviaNota(frequenzeBase[nomeCordaChiave][regola.pos]);
@@ -531,7 +577,8 @@ canvas.addEventListener('mousedown', (e) => {
 
 window.addEventListener('mouseup', () => {
   if (nodoPremutoCorrente !== null) {
-    const infoNota = calcolaDurataEFigura(Date.now() - tempoInizioPressione);
+    const durataEffettiva = Date.now() - tempoInizioPressione;
+    const infoNota = calcolaDurataEFigura(durataEffettiva);
     const { corda: c, pos: p } = nodoPremutoCorrente;
 
     if (inModalitaCreazioneNuovo) {
@@ -563,7 +610,7 @@ window.addEventListener('mouseup', () => {
 });
 
 // ==========================================
-// PENTAGRAMMA E SEQUENCER
+// PENTAGRAMMA E NOTAZIONE UFFICIALE
 // ==========================================
 const canvasPentagramma = document.getElementById('canvasPentagrammaCompositore');
 const ctxPentagramma = canvasPentagramma.getContext('2d');
@@ -576,41 +623,84 @@ function disegnaPentagrammaCompositore() {
     const baseY = 20 + (rigo * 65);
     [baseY, baseY + 8, baseY + 16, baseY + 24, baseY + 32].forEach(y => {
       ctxPentagramma.beginPath(); ctxPentagramma.moveTo(30, y); ctxPentagramma.lineTo(525, y);
-      ctxPentagramma.strokeStyle = "#888"; ctxPentagramma.stroke();
+      ctxPentagramma.strokeStyle = "#888"; ctxPentagramma.lineWidth = 1; ctxPentagramma.stroke();
     });
-    ctxPentagramma.fillStyle = "#222"; ctxPentagramma.font = "bold 20px Arial"; ctxPentagramma.fillText("𝄞", 6, baseY + 26);
+    ctxPentagramma.fillStyle = "#222"; ctxPentagramma.font = "bold 24px serif"; ctxPentagramma.fillText("𝄞", 6, baseY + 26);
   }
 
-  let offsetX = 55, rigoCorrente = 0, noteNelRigo = 0;
+  let offsetX = 55, rigoCorrente = 0;
 
   sequenzaCompositoreCorrente.forEach((elem, index) => {
-    if (noteNelRigo >= 20) { rigoCorrente = 1; offsetX = 55; noteNelRigo = 0; }
+    if (offsetX >= 500) { rigoCorrente = 1; offsetX = 55; }
+    
     const isSelezionata = (indiceNotaSelezionataCompositore === index);
     const isRiproduzione = (indiceInRiproduzioneCompositore === index);
+    const color = isRiproduzione ? "#e74c3c" : (isSelezionata ? "#2980b9" : "#111");
 
-    ctxPentagramma.fillStyle = ctxPentagramma.strokeStyle = isRiproduzione ? "#e74c3c" : (isSelezionata ? "#2980b9" : "#222");
+    ctxPentagramma.fillStyle = color;
+    ctxPentagramma.strokeStyle = color;
+    ctxPentagramma.lineWidth = 1.5;
 
     if (elem.tipo === 'nota') {
       const nomeNota = schemaCorde[elem.corda][elem.pos];
       const yNote = getAltezzaUfficialePentagramma(nomeNota, rigoCorrente);
       const baseYRigo = 20 + (rigoCorrente * 65);
 
+      // Tagli addizionali (Leger lines)
       if (yNote >= baseYRigo + 40) { for (let l = baseYRigo + 40; l <= yNote; l += 8) { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX - 7, l); ctxPentagramma.lineTo(offsetX + 7, l); ctxPentagramma.stroke(); } } 
       else if (yNote <= baseYRigo - 8) { for (let l = baseYRigo - 8; l >= yNote; l -= 8) { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX - 7, l); ctxPentagramma.lineTo(offsetX + 7, l); ctxPentagramma.stroke(); } }
 
-      ctxPentagramma.beginPath(); ctxPentagramma.arc(offsetX, yNote, 3.5, 0, Math.PI * 2);
-      if (elem.tipoNota === 'minima' || elem.tipoNota === 'semibreve') { ctxPentagramma.fillStyle = "#fafafa"; ctxPentagramma.fill(); ctxPentagramma.fillStyle = isRiproduzione ? "#e74c3c" : (isSelezionata ? "#2980b9" : "#222"); }
-      ctxPentagramma.fill();
+      // Disegno Testa della nota
+      ctxPentagramma.beginPath();
+      ctxPentagramma.ellipse(offsetX, yNote, 4.5, 3.5, -Math.PI/6, 0, Math.PI*2);
+      
+      if (elem.tipoNota === 'minima' || elem.tipoNota === 'semibreve') {
+        ctxPentagramma.stroke();
+      } else {
+        ctxPentagramma.fill();
+      }
 
-      if (elem.tipoNota !== 'semibreve') { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX + 3.5, yNote); ctxPentagramma.lineTo(offsetX + 3.5, yNote - 18); ctxPentagramma.stroke(); }
-      if (elem.tipoNota === 'croma' || elem.tipoNota === 'semicroma') { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX + 3.5, yNote - 18); ctxPentagramma.lineTo(offsetX + 9, yNote - 12); ctxPentagramma.stroke(); }
-      if (elem.tipoNota === 'semicroma') { ctxPentagramma.beginPath(); ctxPentagramma.moveTo(offsetX + 3.5, yNote - 12); ctxPentagramma.lineTo(offsetX + 9, yNote - 6); ctxPentagramma.stroke(); }
+      // Gambo e Code
+      if (elem.tipoNota !== 'semibreve') {
+        const stemUp = yNote >= baseYRigo + 16;
+        const stemX = stemUp ? offsetX + 4 : offsetX - 4;
+        const stemDir = stemUp ? -22 : 22;
+        
+        ctxPentagramma.beginPath();
+        ctxPentagramma.moveTo(stemX, yNote);
+        ctxPentagramma.lineTo(stemX, yNote + stemDir);
+        ctxPentagramma.stroke();
 
-      ctxPentagramma.font = "7px Arial"; ctxPentagramma.fillStyle = "#555"; ctxPentagramma.fillText(nomeNota, offsetX - 5, (rigoCorrente === 0 ? 58 : 123));
+        // Disegno code (croma e semicroma)
+        if (elem.tipoNota === 'croma' || elem.tipoNota === 'semicroma') {
+          ctxPentagramma.beginPath();
+          ctxPentagramma.moveTo(stemX, yNote + stemDir);
+          ctxPentagramma.quadraticCurveTo(stemX + 6, yNote + stemDir + (stemUp?10:-10), stemX + 8, yNote + stemDir + (stemUp?20:-20));
+          ctxPentagramma.stroke();
+        }
+        if (elem.tipoNota === 'semicroma') {
+          const offsetCoda2 = stemUp ? 6 : -6;
+          ctxPentagramma.beginPath();
+          ctxPentagramma.moveTo(stemX, yNote + stemDir + offsetCoda2);
+          ctxPentagramma.quadraticCurveTo(stemX + 6, yNote + stemDir + offsetCoda2 + (stemUp?10:-10), stemX + 8, yNote + stemDir + offsetCoda2 + (stemUp?20:-20));
+          ctxPentagramma.stroke();
+        }
+      }
+
+      ctxPentagramma.font = "9px Arial"; ctxPentagramma.fillStyle = "#555"; 
+      ctxPentagramma.fillText(nomeNota, offsetX - 6, (rigoCorrente === 0 ? 62 : 127));
+      
+      // Calcolo spaziatura dinamica basata sulla durata
+      let addSpace = 25;
+      if (elem.tipoNota === 'semibreve') addSpace = 45;
+      if (elem.tipoNota === 'minima') addSpace = 35;
+      if (elem.tipoNota === 'semicroma') addSpace = 20;
+      offsetX += addSpace;
+
     } else {
-      ctxPentagramma.font = "bold 11px Arial"; ctxPentagramma.fillText("𝄾", offsetX - 3, (rigoCorrente === 0 ? 38 : 103));
+      ctxPentagramma.font = "bold 16px serif"; ctxPentagramma.fillText("𝄾", offsetX - 5, (rigoCorrente === 0 ? 42 : 107));
+      offsetX += 25;
     }
-    offsetX += 23; noteNelRigo++;
   });
 
   if (indiceNotaSelezionataCompositore !== null && sequenzaCompositoreCorrente[indiceNotaSelezionataCompositore]) {
@@ -621,18 +711,26 @@ function disegnaPentagrammaCompositore() {
 }
 
 canvasPentagramma.onclick = (e) => {
-  let currX = 55, indiceTrovato = null;
   const clickX = e.clientX - canvasPentagramma.getBoundingClientRect().left;
-  sequenzaCompositoreCorrente.forEach((_, idx) => {
-    if (Math.abs(clickX - currX) < 12) indiceTrovato = idx;
-    currX += 23;
+  let currX = 55, indiceTrovato = null;
+  
+  sequenzaCompositoreCorrente.forEach((elem, idx) => {
+    if (Math.abs(clickX - currX) < 15) indiceTrovato = idx;
+    
+    let addSpace = 25;
+    if (elem.tipoNota === 'semibreve') addSpace = 45;
+    if (elem.tipoNota === 'minima') addSpace = 35;
+    if (elem.tipoNota === 'semicroma') addSpace = 20;
+    currX += addSpace;
+    if (currX >= 500) currX = 55;
   });
+
   if (indiceTrovato !== null) { indiceNotaSelezionataCompositore = indiceTrovato; disegnaPentagrammaCompositore(); }
 };
 
 document.getElementById('btn-applica-durata').onclick = () => {
   if (indiceNotaSelezionataCompositore !== null) {
-    const mapD = { 'semicroma': 150, 'croma': 300, 'semiminima': 600, 'minima': 1100, 'semibreve': 1800 };
+    const mapD = { 'semicroma': 250, 'croma': 450, 'semiminima': 800, 'minima': 1400, 'semibreve': 2000 };
     const val = document.getElementById('select-nuova-durata').value;
     sequenzaCompositoreCorrente[indiceNotaSelezionataCompositore].tipoNota = val;
     sequenzaCompositoreCorrente[indiceNotaSelezionataCompositore].durataMs = mapD[val];
@@ -640,7 +738,7 @@ document.getElementById('btn-applica-durata').onclick = () => {
   }
 };
 
-document.getElementById('seq-pausa').onclick = () => { if (sequenzaCompositoreCorrente.length < 50) { sequenzaCompositoreCorrente.push({ tipo: 'pausa', tipoNota: 'semiminima', durataMs: 600 }); disegnaPentagrammaCompositore(); } };
+document.getElementById('seq-pausa').onclick = () => { if (sequenzaCompositoreCorrente.length < 50) { sequenzaCompositoreCorrente.push({ tipo: 'pausa', tipoNota: 'semiminima', durataMs: 800 }); disegnaPentagrammaCompositore(); } };
 document.getElementById('seq-pulisci').onclick = () => { sequenzaCompositoreCorrente = []; indiceNotaSelezionataCompositore = null; disegnaPentagrammaCompositore(); };
 document.getElementById('seq-cancella-nota').onclick = () => {
   if (indiceNotaSelezionataCompositore !== null) { sequenzaCompositoreCorrente.splice(indiceNotaSelezionataCompositore, 1); indiceNotaSelezionataCompositore = null; } 
@@ -660,7 +758,7 @@ function riproduciSequenzaTeorema(regola) {
     if (elem.tipo === 'nota') {
       avviaNota(frequenzeBase[["E", "A", "D", "G"][elem.corda]][elem.pos]);
       DisegnaTastiera(regola.id, { corda: elem.corda, pos: elem.pos });
-      setTimeout(() => { fermaNota(); i++; setTimeout(suonaProssima, 100); }, elem.durataMs);
+      setTimeout(() => { fermaNota(); i++; setTimeout(suonaProssima, 80); }, elem.durataMs);
     } else {
       DisegnaTastiera(regola.id);
       setTimeout(() => { i++; suonaProssima(); }, elem.durataMs);
@@ -683,13 +781,13 @@ document.getElementById('seq-registra').onclick = () => {
   mediaRecorder.start();
   let i = 0;
   function suonaEregistra() {
-    if (i >= sequenzaCompositoreCorrente.length) { indiceInRiproduzioneCompositore = null; disegnaPentagrammaCompositore(); DisegnaTastiera(); setTimeout(() => mediaRecorder.stop(), 400); return; }
+    if (i >= sequenzaCompositoreCorrente.length) { indiceInRiproduzioneCompositore = null; disegnaPentagrammaCompositore(); DisegnaTastiera(); setTimeout(() => mediaRecorder.stop(), 500); return; }
     indiceInRiproduzioneCompositore = i; disegnaPentagrammaCompositore();
     const elem = sequenzaCompositoreCorrente[i];
     if (elem.tipo === 'nota') {
       avviaNota(frequenzeBase[["E", "A", "D", "G"][elem.corda]][elem.pos]);
       DisegnaTastiera(null, { corda: elem.corda, pos: elem.pos });
-      setTimeout(() => { fermaNota(); i++; setTimeout(suonaEregistra, 100); }, elem.durataMs);
+      setTimeout(() => { fermaNota(); i++; setTimeout(suonaEregistra, 80); }, elem.durataMs);
     } else { DisegnaTastiera(); setTimeout(() => { i++; suonaEregistra(); }, elem.durataMs); }
   }
   suonaEregistra();
@@ -731,8 +829,8 @@ document.getElementById('btn-chiudi-compositore').onclick = chiudiCompositore;
 
 document.getElementById('btn-salva-teorema').onclick = () => {
   const nuovoTeorema = {
-    titolo: document.getElementById('input-titolo-teorema').value.trim() || "Teorema",
-    enunciato: document.getElementById('input-enunciato-teorema').value.trim() || "...",
+    titolo: document.getElementById('input-titolo-teorema').value.trim() || "Teorema Musicale",
+    enunciato: document.getElementById('input-enunciato-teorema').value.trim() || "Nessun enunciato.",
     colore: document.getElementById('input-colore-teorema').value,
     sequenza: sequenzaCompositoreCorrente
   };
@@ -740,7 +838,7 @@ document.getElementById('btn-salva-teorema').onclick = () => {
   salvaInDatabase(nuovoTeorema, !!idTeoremaInModifica);
 };
 
-// Inizializzazione avvio
+// Avvio Iniziale
 caricaDaDatabase();
 </script>
 </body>
