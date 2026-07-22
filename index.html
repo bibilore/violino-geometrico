@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mappatura Geometrica - Violino Compositore</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    height: 100vh;
+    background-color: #f4f4f4;
+    user-select: none;
+    overflow: hidden;
+  }
+  #pannello-sinistro {
+    width: 35%;
+    overflow-y: auto;
+    background: #ffffff;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+  }
+  .lista-regole {
+    list-style-type: none;
+    padding: 0;
+    margin-bottom: 20px;
+  }
+  .regola-item {
+    padding: 8px 10px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9em;
+    transition: background 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .regola-item:hover {
+    background: #e9f5ff;
+  }
+  .regola-item.attiva {
+    background: #d0e8ff;
+    font-weight: bold;
+  }
+  .azioni-custom {
+    display: flex;
+    gap: 5px;
+  }
+  .btn-micro {
+    background: #ddd;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    cursor: pointer;
+  }
+  .btn-micro:hover { background: #bbb; }
+  .btn-micro.elimina:hover { background: #e74c3c; color: #fff; }
+
+  #btn-nuovo-teorema {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: auto;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+  #btn-nuovo-teorema:hover { background: #219653; }
+
+  #pannello-destro {
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    justify-content: flex-start;
+    align-items: center;
+    overflow-y: auto;
+  }
+  canvas {
+    background: #111;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    max-width: 100%;
+    height: auto;
+    cursor: pointer;
+  }
+  #riquadro-enunciato {
+    margin-top: 15px;
+    padding: 15px;
+    background: #fff;
+    border-left: 5px solid #ccc;
+    width: 90%;
+    min-height: 60px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 0.95em;
+    line-height: 1.4;
+    display: none;
+  }
+
+  /* Modale di Creazione/Modifica Teorema con Pentagramma Integrato */
+  #overlay-modale {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  .modale-contenuto {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .modale-contenuto input, .modale-contenuto textarea {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .modale-contenuto textarea { resize: vertical; height: 60px; }
+  
+  #canvasPentagrammaModale {
+    background: #fafafa;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    align-self: center;
+  }
+  .controlli-sequenziatore {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 5px;
+  }
+  .btn-seq {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    background: #3498db;
+    color: white;
+    font-size: 0.8em;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .btn-seq:hover { background: #2980b9; }
+  .modale-bottoni {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div id="pannello-sinistro">
+  <h2>Teoremi e Postulati</h2>
+  <ul class="lista-regole" id="lista"></ul>
+  <button id="btn-nuovo-teorema">➕ Componi Nuovo Teorema</button>
+</div>
+
+<div id="pannello-destro">
+  <canvas id="canvasViolino" width="950" height="330"></canvas>
+  <div id="riquadro-enunciato"></div>
+</div>
+
+<!-- Modale per salvare/modificare il teorema e comporre lo spartito -->
+<div id="overlay-modale">
+  <div class="modale-contenuto">
+    <h3 id="modale-titolo" style="margin:0;">Salva Teorema</h3>
+    
+    <label><b>Titolo del Teorema:</b></label>
+    <input type="text" id="input-titolo-teorema" placeholder="Es: Teorema della melodia geometrica">
+    
+    <label><b>Enunciato:</b></label>
+    <textarea id="input-enunciato-teorema" placeholder="Descrivi l'enunciato associato..."></textarea>
+    
+    <div style="display: flex; gap: 15px; align-items: center;">
+      <div>
+        <label><b>Colore:</b></label><br>
+        <input type="color" id="input-colore-teorema" value="#8e44ad" style="height:32px; width:50px; padding:0; border:none; cursor:pointer;">
+      </div>
+      <div style="flex-grow: 1; font-size: 0.85em; color: #555;">
+        <i>Componi lo spartito cliccando direttamente sul violino principale o usa i tasti sotto per gestire le note del teorema.</i>
+      </div>
+    </div>
+
+    <label><b>Spartito / Pentagramma:</b></label>
+    <canvas id="canvasPentagrammaModale" width="540" height="110"></canvas>
+    
+    <div class="controlli-sequenziatore">
+      <button class="btn-seq" id="seq-pausa">⏸️ Pausa</button>
+      <button class="btn-seq" id="seq-cancella-nota">🗑️ Cancella Nota</button>
+      <button class="btn-seq" id="seq-ascolta">▶️ Ascolta</button>
+      <button class="btn-seq" id="seq-registra" style="background:#e67e22;">🔴 Registra & Scarica</button>
+      <button class="btn-seq" id="seq-pulisci" style="background:#c0392b;">🗑️ Pulisci Tutto</button>
+    </div>
+
+    <div class="modale-bottoni">
+      <button class="btn-seq" style="background:#95a5a6;" id="btn-chiudi-modale">Annulla</button>
+      <button class="btn-seq" style="background:#27ae60;" id="btn-salva-modale">Salva Teorema</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+let destinationStreamNode = null;
+let mediaRecorder = null;
+let registrazioniChunk = [];
+
+let oscillatoreCorrente = null;
+let gainCorrente = null;
+let timeoutChiusuraNota = null;
+
+function inizializzaAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new AudioContext();
+    destinationStreamNode = audioCtx.createMediaStreamDestination();
+    destinationStreamNode.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function avviaNota(frequenza) {
+  inizializzaAudioContext();
+  fermaNotaImmediata();
+
+  oscillatoreCorrente = audioCtx.createOscillator();
+  gainCorrente = audioCtx.createGain();
+  
+  oscillatoreCorrente.type = 'sawtooth';
+  oscillatoreCorrente.frequency.setValueAtTime(frequenza, audioCtx.currentTime);
+  
+  gainCorrente.gain.setValueAtTime(0, audioCtx.currentTime);
+  gainCorrente.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + 0.05);
+  
+  oscillatoreCorrente.connect(gainCorrente);
+  gainCorrente.connect(audioCtx.destination);
+  if (destinationStreamNode) {
+    gainCorrente.connect(destinationStreamNode);
+  }
+  
+  oscillatoreCorrente.start();
+}
+
+function fermaNota() {
+  if (oscillatoreCorrente && gainCorrente && audioCtx) {
+    if (timeoutChiusuraNota) clearTimeout(timeoutChiusuraNota);
+    const tempoAttuale = audioCtx.currentTime;
+    try {
+      gainCorrente.gain.setValueAtTime(gainCorrente.gain.value, tempoAttuale);
+      gainCorrente.gain.linearRampToValueAtTime(0.0001, tempoAttuale + 0.2);
+    } catch(e) {}
+    
+    const oscDaChiudere = oscillatoreCorrente;
+    const gainDaChiudere = gainCorrente;
+    
+    timeoutChiusuraNota = setTimeout(() => { 
+      try { 
+        oscDaChiudere.stop(); 
+        oscDaChiudere.disconnect();
+        gainDaChiudere.disconnect();
+      } catch(e) {} 
+    }, 250);
+    
+    oscillatoreCorrente = null;
+    gainCorrente = null;
+  }
+}
+
+function fermaNotaImmediata() {
+  if (timeoutChiusuraNota) clearTimeout(timeoutChiusuraNota);
+  if (oscillatoreCorrente) {
+    try {
+      oscillatoreCorrente.stop();
+      oscillatoreCorrente.disconnect();
+    } catch(e) {}
+    oscillatoreCorrente = null;
+    gainCorrente = null;
+  }
+}
+
+const schemaCorde = [
+  ["E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E"],       
+  ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A"],       
+  ["D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D"],       
+  ["G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G"]        
+];
+
+const frequenzeBase = {
+  "E": [659.25, 698.46, 739.99, 783.99, 830.61, 880.00, 932.33, 987.77, 1046.50, 1108.73, 1174.66, 1244.51, 1318.51],
+  "A": [440.00, 466.16, 493.88, 523.25, 554.37, 587.33, 622.25, 659.25, 698.46, 739.99, 783.99, 830.61, 880.00],
+  "D": [293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25, 554.37, 587.33],
+  "G": [196.00, 207.65, 220.00, 233.08, 246.94, 261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00]
+};
+
+const regoleBase = [
+  { corda: 3, pos: 0, titolo: "Definizione di triangolo", enunciato: "Un triangolo è un insieme di punti del piano costituito da una poligonale chiusa di tre lati e dai suoi punti interni.", colore: "#e74c3c" },
+  { corda: 3, pos: 1, titolo: "Classificazione dei triangoli rispetto ai lati", enunciato: "Un triangolo è equilatero se ha i tre lati congruenti; è isoscele se ha due lati congruenti; è scaleno se ha i tre lati fra loro non congruenti.", colore: "#e67e22" },
+  { corda: 3, pos: 2, titolo: "Classificazione dei triangoli rispetto agli angoli", enunciato: "Un triangolo è acutangolo se ha tutti gli angoli acuti; è rettangolo se ha un angolo retto; è ottusangolo se ha un angolo ottuso.", colore: "#f1c40f" },
+  { corda: 3, pos: 3, titolo: "Postulato sul primo criterio di congruenza", enunciato: "Se due triangoli hanno ordinatamente congruenti due lati e l'angolo compreso, allora essi sono congruenti.", colore: "#2ecc71" },
+  { corda: 3, pos: 4, titolo: "Teorema sul secondo criterio di congruenza", enunciato: "Se due triangoli hanno ordinatamente congruenti un lato e i due angoli adiacenti ad esso, allora essi sono congruenti.", colore: "#1abc9c" },
+  { corda: 3, pos: 5, titolo: "Teorema sull'angolo esterno di un triangolo", enunciato: "In un triangolo ogni angolo esterno è maggiore di ciascuno degli angoli interni non adiacenti ad esso.", colore: "#3498db" },
+  { corda: 3, pos: 6, titolo: "Teorema sulle proprietà dedotte dall'angolo esterno", enunciato: "In un triangolo la somma di due angoli interni è minore di un angolo piatto.", colore: "#9b59b6" },
+
+  { corda: 2, pos: 0, titolo: "Teorema del triangolo isoscele", enunciato: "Se un triangolo è isoscele, allora ha congruenti gli angoli alla base.", colore: "#e74c3c" },
+  { corda: 2, pos: 1, titolo: "Teorema inverso del triangolo isoscele", enunciato: "Se un triangolo ha due angoli congruenti, allora è isoscele.", colore: "#e67e22" },
+  { corda: 2, pos: 2, titolo: "Teorema sulla condizione necessaria e sufficiente del triangolo isoscele", enunciato: "Un triangolo è isoscele se e solo se ha i due angoli alla base congruenti.", colore: "#f1c40f" },
+  { corda: 2, pos: 3, titolo: "Teorema della bisettrice nel triangolo isoscele", enunciato: "In un triangolo isoscele la bisettrice dell'angolo al vertice è anche altezza e mediana.", colore: "#2ecc71" },
+  { corda: 2, pos: 4, titolo: "Corollario sul triangolo equilatero e equiangolo", enunciato: "Se un triangolo è equilatero, allora è equiangolo.", colore: "#1abc9c" },
+  { corda: 2, pos: 5, titolo: "Corollario sull'equiangolarità del triangolo", enunciato: "Se un triangolo è equiangolo, allora è equilatero.", colore: "#3498db" },
+  { corda: 2, pos: 6, titolo: "Definizione di asse di un segmento", enunciato: "L'asse di un segmento è la retta perpendicolare al segmento nel suo punto medio.", colore: "#9b59b6" },
+
+  { corda: 1, pos: 0, titolo: "Definizione di rette perpendicolari", enunciato: "Due rette incidenti che formano quattro angoli congruenti si dicono perpendicolari.", colore: "#e74c3c" },
+  { corda: 1, pos: 1, titolo: "Teorema sull'esistenza e unicità della retta perpendicolare", enunciato: "Data una retta e un punto, esiste una e una sola retta passante per il punto e perpendicolare alla retta data.", colore: "#e67e22" },
+  { corda: 1, pos: 2, titolo: "Definizione di proiezioni ortogonali e distanza", enunciato: "La proiezione ortogonale di un punto su una retta è il piede della perpendicolare condotta dal punto alla retta.", colore: "#f1c40f" },
+  { corda: 1, pos: 3, titolo: "Definizione di rette parallele", enunciato: "Due rette che non hanno alcun punto in comune oppure che coincidono si dicono parallele.", colore: "#2ecc71" },
+  { corda: 1, pos: 4, titolo: "Teorema sull'esistenza delle rette parallele", enunciato: "Se due rette tagliate da una trasversale formano angoli alterni interni congruenti, allora le due rette sono parallele.", colore: "#1abc9c" },
+  { corda: 1, pos: 5, titolo: "Postulato sul parallelismo (Quinto postulato di Euclide)", enunciato: "Data una retta e un punto fuori di essa, passa per quel punto una e una sola retta parallela alla retta data.", colore: "#3498db" },
+  { corda: 1, pos: 6, titolo: "Teorema sugli angoli con lati paralleli", enunciato: "Due angoli che hanno i lati rispettivamente paralleli sono o congruenti o supplementari.", colore: "#9b59b6" },
+
+  { corda: 0, pos: 0, titolo: "Definizione di distanza tra due rette parallele", enunciato: "La distanza tra due rette parallele è la lunghezza del segmento di perpendicolare compreso tra le due rette.", colore: "#e74c3c" },
+  { corda: 0, pos: 1, titolo: "Definizione di parallelogramma", enunciato: "Un parallelogramma è un quadrilatero avente i lati opposti paralleli.", colore: "#e67e22" },
+  { corda: 0, pos: 2, titolo: "Definizione di rettangolo", enunciato: "Un rettangolo è un parallelogramma avente tutti gli angoli retti.", colore: "#f1c40f" },
+  { corda: 0, pos: 3, titolo: "Definizione di rombo", enunciato: "Un rombo è un parallelogramma avente tutti i lati congruenti.", colore: "#2ecc71" },
+  { corda: 0, pos: 4, titolo: "Definizione di quadrato", enunciato: "Un quadrato è un rettangolo ed anche un rombo (avente cioè tutti i lati e tutti gli angoli congruenti).", colore: "#1abc9c" },
+  { corda: 0, pos: 5, titolo: "Definizione di trapezio", enunciato: "Un trapezio è un quadrilatero avente due lati opposti paralleli.", colore: "#3498db" },
+  { corda: 0, pos: 6, titolo: "Definizione di trapezio isoscele e rettangolo", enunciato: "Un trapezio si dice isoscele se ha i lati obliqui congruenti; si dice rettangolo se uno dei suoi lati obliqui è perpendicolare alle basi.", colore: "#9b59b6" }
+];
+
+let teoremiCustom = [];
+try {
+  if (window.location.hash) {
+    const jsonDecoded = decodeURIComponent(window.location.hash.substring(1));
+    teoremiCustom = JSON.parse(jsonDecoded);
+  }
+} catch(e) {
+  console.error("Errore nel recupero dei teoremi dall'URL", e);
+}
+
+function salvaTeoremiCustomNellUrl() {
+  if (teoremiCustom.length > 0) {
+    window.location.hash = encodeURIComponent(JSON.stringify(teoremiCustom));
+  } else {
+    window.location.hash = "";
+  }
+}
+
+let regoleGeometria = [...regoleBase, ...teoremiCustom];
+
+const canvas = document.getElementById('canvasViolino');
+const ctx = canvas.getContext('2d');
+const listaEl = document.getElementById('lista');
+const enunciatoEl = document.getElementById('riquadro-enunciato');
+
+let regolaSelezionataId = null;
+let elementiLista = [];
+
+let sequenzaModaleCorrente = [];
+let indiceNotaSelezionataModale = null;
+let indiceInRiproduzioneModale = null;
+
+function getCoordNodo(corda, pos) {
+  const xStart = 80;
+  const xEnd = 900;
+  const passoX = (xEnd - xStart) / 12;
+  const x = xStart + pos * passoX;
+  const yStart = 60;
+  const yEnd = 270;
+  const y = yStart + (yEnd - yStart) * (corda / 3);
+  return { x, y };
+}
+
+function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#1e1e1e";
+  ctx.fillRect(50, 35, 880, 260);
+
+  ctx.fillStyle = "#2c2c2c";
+  ctx.fillRect(50, 35, 20, 260);
+
+  for (let c = 0; c < 4; c++) {
+    const y = 60 + (210 / 3) * c;
+    ctx.beginPath();
+    ctx.moveTo(50, y);
+    ctx.lineTo(930, y);
+    ctx.strokeStyle = c < 2 ? "#ffffff" : "#dcdcdc";
+    ctx.lineWidth = 1.5 + c * 0.3;
+    ctx.stroke();
+  }
+
+  for (let c = 0; c < 4; c++) {
+    for (let p = 0; p < 13; p++) {
+      const { x, y } = getCoordNodo(c, p);
+      const nomeNota = schemaCorde[c][p];
+
+      const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p);
+      const èAttiva = regolaTrovata && (regolaTrovata.id === attivaId);
+      const èLive = notaEvidenziataLive && (notaEvidenziataLive.corda === c && notaEvidenziataLive.pos === p);
+
+      ctx.beginPath();
+      ctx.arc(x, y, 14, 0, Math.PI * 2);
+      
+      if (èLive) {
+        ctx.fillStyle = "#e74c3c";
+        ctx.shadowColor = "#e74c3c";
+        ctx.shadowBlur = 20;
+      } else if (èAttiva) {
+        ctx.fillStyle = regolaTrovata.colore;
+        ctx.shadowColor = regolaTrovata.colore;
+        ctx.shadowBlur = 15;
+      } else {
+        ctx.fillStyle = "#cccccc";
+        ctx.shadowBlur = 0;
+      }
+      
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = (èAttiva || èLive) ? "#ffffff" : "#777777";
+      ctx.stroke();
+
+      ctx.fillStyle = (èAttiva || èLive) ? "#ffffff" : "#222222";
+      ctx.font = "bold 11px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(nomeNota, x, y);
+    }
+  }
+}
+
+function popolaLista() {
+  listaEl.innerHTML = '';
+  elementiLista = [];
+
+  regoleGeometria.forEach((regola, index) => {
+    regola.id = index + 1;
+    const isCustom = index >= 28;
+
+    const li = document.createElement('li');
+    li.className = 'regola-item';
+
+    const spanTesto = document.createElement('span');
+    spanTesto.textContent = regola.titolo;
+    spanTesto.style.flexGrow = '1';
+    spanTesto.style.cursor = 'pointer';
+    li.appendChild(spanTesto);
+
+    if (isCustom) {
+      const divAzioni = document.createElement('div');
+      divAzioni.className = 'azioni-custom';
+
+      const btnModifica = document.createElement('button');
+      btnModifica.className = 'btn-micro';
+      btnModifica.textContent = '✏️';
+      btnModifica.title = 'Modifica teorema';
+      btnModifica.onclick = (e) => { e.stopPropagation(); apriModaleModifica(index); };
+
+      const btnElimina = document.createElement('button');
+      btnElimina.className = 'btn-micro elimina';
+      btnElimina.textContent = '🗑️';
+      btnElimina.title = 'Elimina teorema';
+      btnElimina.onclick = (e) => { e.stopPropagation(); eliminaTeorema(index); };
+
+      divAzioni.appendChild(btnModifica);
+      divAzioni.appendChild(btnElimina);
+      li.appendChild(divAzioni);
+    }
+
+    listaEl.appendChild(li);
+    elementiLista.push(li);
+
+    spanTesto.addEventListener('mouseenter', () => {
+      if (regolaSelezionataId !== regola.id) {
+        enunciatoEl.style.display = 'block';
+        enunciatoEl.innerHTML = `<strong>${regola.titolo}</strong><br><br>${regola.enunciato}`;
+        enunciatoEl.style.borderLeftColor = regola.colore;
+        DisegnaTastiera(regola.id);
+      }
+    });
+
+    spanTesto.addEventListener('mouseleave', () => {
+      if (regolaSelezionataId !== regola.id) {
+        enunciatoEl.style.display = 'none';
+        DisegnaTastiera(regolaSelezionataId);
+        elementiLista.forEach(el => el.classList.remove('attiva'));
+        if (regolaSelezionataId) elementiLista[regolaSelezionataId - 1].classList.add('attiva');
+      }
+    });
+
+    spanTesto.addEventListener('mousedown', () => {
+      elementiLista.forEach(el => el.classList.remove('attiva'));
+      regolaSelezionataId = regola.id;
+      li.classList.add('attiva');
+      
+      enunciatoEl.style.display = 'block';
+      enunciatoEl.innerHTML = `<strong>${regola.titolo}</strong><br><br>${regola.enunciato}`;
+      enunciatoEl.style.borderLeftColor = regola.colore;
+
+      DisegnaTastiera(regola.id);
+
+      if (regola.sequenza && regola.sequenza.length > 0) {
+        riproduciSequenzaTeorema(regola);
+      } else if (regola.corda !== undefined && regola.pos !== undefined) {
+        const nomeCordaChiave = ["E", "A", "D", "G"][regola.corda];
+        avviaNota(frequenzeBase[nomeCordaChiave][regola.pos]);
+      }
+    });
+
+    spanTesto.addEventListener('mouseup', () => {
+      fermaNota();
+    });
+  });
+}
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mouseX = (e.clientX - rect.left) * scaleX;
+  const mouseY = (e.clientY - rect.top) * scaleY;
+
+  let trovatoHover = null;
+  for (let c = 0; c < 4; c++) {
+    for (let p = 0; p < 13; p++) {
+      const { x, y } = getCoordNodo(c, p);
+      if (Math.hypot(mouseX - x, mouseY - y) <= 14) {
+        trovatoHover = { corda: c, pos: p };
+        break;
+      }
+    }
+    if (trovatoHover) break;
+  }
+
+  elementiLista.forEach(el => el.classList.remove('attiva'));
+
+  if (trovatoHover) {
+    canvas.style.cursor = 'pointer';
+    const regolaTrovata = regoleGeometria.find(r => r.corda === trovatoHover.corda && r.pos === trovatoHover.pos);
+    if (regolaTrovata) {
+      enunciatoEl.style.display = 'block';
+      enunciatoEl.innerHTML = `<strong>${regolaTrovata.titolo}</strong><br><br>${regolaTrovata.enunciato}`;
+      enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
+      elementiLista[regolaTrovata.id - 1].classList.add('attiva');
+      DisegnaTastiera(regolaTrovata.id);
+    } else {
+      enunciatoEl.style.display = 'none';
+      DisegnaTastiera(regolaSelezionataId);
+      if (regolaSelezionataId) elementiLista[regolaSelezionataId - 1].classList.add('attiva');
+    }
+  } else {
+    canvas.style.cursor = 'default';
+    if (!regolaSelezionataId) {
+      enunciatoEl.style.display = 'none';
+      DisegnaTastiera();
+    } else {
+      DisegnaTastiera(regolaSelezionataId);
+      elementiLista[regolaSelezionataId - 1].classList.add('attiva');
+    }
+  }
+});
+
+canvas.addEventListener('mouseleave', () => {
+  canvas.style.cursor = 'default';
+  elementiLista.forEach(el => el.classList.remove('attiva'));
+  if (regolaSelezionataId) {
+    elementiLista[regolaSelezionataId - 1].classList.add('attiva');
+    DisegnaTastiera(regolaSelezionataId);
+  } else {
+    enunciatoEl.style.display = 'none';
+    DisegnaTastiera();
+  }
+});
+
+canvas.addEventListener('mousedown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mouseX = (e.clientX - rect.left) * scaleX;
+  const mouseY = (e.clientY - rect.top) * scaleY;
+
+  for (let c = 0; c < 4; c++) {
+    for (let p = 0; p < 13; p++) {
+      const { x, y } = getCoordNodo(c, p);
+      if (Math.hypot(mouseX - x, mouseY - y) <= 14) {
+        const nomeCordaChiave = ["E", "A", "D", "G"][c];
+        const freq = frequenzeBase[nomeCordaChiave][p];
+        avviaNota(freq);
+
+        if (document.getElementById('overlay-modale').style.display === 'flex') {
+          if (indiceNotaSelezionataModale !== null) {
+            sequenzaModaleCorrente[indiceNotaSelezionataModale] = { tipo: 'nota', corda: c, pos: p, durata: 'semiminima' };
+            indiceNotaSelezionataModale = null;
+          } else {
+            sequenzaModaleCorrente.push({ tipo: 'nota', corda: c, pos: p, durata: 'semiminima' });
+          }
+          disegnaPentagrammaModale();
+        } else {
+          const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p);
+          if (regolaTrovata) {
+            elementiLista.forEach(el => el.classList.remove('attiva'));
+            regolaSelezionataId = regolaTrovata.id;
+            elementiLista[regolaSelezionataId - 1].classList.add('attiva');
+            enunciatoEl.style.display = 'block';
+            enunciatoEl.innerHTML = `<strong>${regolaTrovata.titolo}</strong><br><br>${regolaTrovata.enunciato}`;
+            enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
+            DisegnaTastiera(regolaTrovata.id);
+          }
+        }
+        return;
+      }
+    }
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  fermaNota();
+});
+
+const canvasPentagrammaModale = document.getElementById('canvasPentagrammaModale');
+const ctxPentagrammaModale = canvasPentagrammaModale.getContext('2d');
+
+function disegnaPentagrammaModale() {
+  if (!ctxPentagrammaModale) return;
+  ctxPentagrammaModale.clearRect(0, 0, canvasPentagrammaModale.width, canvasPentagrammaModale.height);
+
+  const lineeY = [30, 40, 50, 60, 70];
+  lineeY.forEach(y => {
+    ctxPentagrammaModale.beginPath();
+    ctxPentagrammaModale.moveTo(35, y);
+    ctxPentagrammaModale.lineTo(520, y);
+    ctxPentagrammaModale.strokeStyle = "#888";
+    ctxPentagrammaModale.stroke();
+  });
+
+  ctxPentagrammaModale.fillStyle = "#222";
+  ctxPentagrammaModale.font = "bold 26px Arial";
+  ctxPentagrammaModale.fillText("𝄞", 8, 62);
+
+  let offsetX = 60;
+  sequenzaModaleCorrente.forEach((elem, index) => {
+    if (offsetX > 500) offsetX = 60;
+
+    const isSelezionata = (indiceNotaSelezionataModale === index);
+    const isRiproduzione = (indiceInRiproduzioneModale === index);
+
+    ctxPentagrammaModale.fillStyle = isRiproduzione ? "#e74c3c" : (isSelezionata ? "#2980b9" : "#222");
+    ctxPentagrammaModale.strokeStyle = isRiproduzione ? "#e74c3c" : (isSelezionata ? "#2980b9" : "#222");
+
+    if (elem.tipo === 'nota') {
+      const yNote = 80 - (elem.corda * 10 + elem.pos * 1.2); 
+      
+      ctxPentagrammaModale.beginPath();
+      ctxPentagrammaModale.arc(offsetX, yNote, 4.5, 0, Math.PI * 2);
+      ctxPentagrammaModale.fill();
+
+      ctxPentagrammaModale.beginPath();
+      ctxPentagrammaModale.moveTo(offsetX + 4.5, yNote);
+      ctxPentagrammaModale.lineTo(offsetX + 4.5, yNote - 22);
+      ctxPentagrammaModale.stroke();
+
+      ctxPentagrammaModale.font = "8px Arial";
+      ctxPentagrammaModale.fillStyle = "#555";
+      ctxPentagrammaModale.fillText(schemaCorde[elem.corda][elem.pos], offsetX - 6, 98);
+    } else if (elem.tipo === 'pausa') {
+      ctxPentagrammaModale.font = "bold 14px Arial";
+      ctxPentagrammaModale.fillText("𝄾", offsetX - 4, 55);
+      ctxPentagrammaModale.font = "8px Arial";
+      ctxPentagrammaModale.fillText("pausa", offsetX - 8, 98);
+    }
+
+    offsetX += 30;
+  });
+}
+
+canvasPentagrammaModale.onclick = (e) => {
+  const rect = canvasPentagrammaModale.getBoundingClientRect();
+  const clickX = e.clientX - rect.left;
+  let currX = 60;
+  let indiceTrovato = null;
+  sequenzaModaleCorrente.forEach((_, idx) => {
+    if (Math.abs(clickX - currX) < 15) indiceTrovato = idx;
+    currX += 30;
+  });
+  if (indiceTrovato !== null) {
+    indiceNotaSelezionataModale = indiceTrovato;
+    disegnaPentagrammaModale();
+  }
+};
+
+document.getElementById('seq-pausa').onclick = () => {
+  sequenzaModaleCorrente.push({ tipo: 'pausa', durata: 'semiminima' });
+  disegnaPentagrammaModale();
+};
+
+document.getElementById('seq-pulisci').onclick = () => {
+  sequenzaModaleCorrente = [];
+  indiceNotaSelezionataModale = null;
+  disegnaPentagrammaModale();
+};
+
+document.getElementById('seq-cancella-nota').onclick = () => {
+  if (indiceNotaSelezionataModale !== null) {
+    sequenzaModaleCorrente.splice(indiceNotaSelezionataModale, 1);
+    indiceNotaSelezionataModale = null;
+    disegnaPentagrammaModale();
+  } else if (sequenzaModaleCorrente.length > 0) {
+    sequenzaModaleCorrente.pop();
+    disegnaPentagrammaModale();
+  }
+};
+
+document.getElementById('seq-ascolta').onclick = () => {
+  riproduciSequenzaModale();
+};
+
+document.getElementById('seq-registra').onclick = () => {
+  if (sequenzaModaleCorrente.length === 0) {
+    alert("Inserisci almeno una nota nel pentagramma prima di registrare!");
+    return;
+  }
+  avviaRegistrazioneEScaricaModale();
+};
+
+function riproduciSequenzaModale() {
+  let i = 0;
+  function suonaProssima() {
+    if (i >= sequenzaModaleCorrente.length) {
+      indiceInRiproduzioneModale = null;
+      disegnaPentagrammaModale();
+      DisegnaTastiera();
+      return;
+    }
+    indiceInRiproduzioneModale = i;
+    disegnaPentagrammaModale();
+
+    const elem = sequenzaModaleCorrente[i];
+    if (elem.tipo === 'nota') {
+      const nomeCordaChiave = ["E", "A", "D", "G"][elem.corda];
+      const freq = frequenzeBase[nomeCordaChiave][elem.pos];
+      avviaNota(freq);
+      DisegnaTastiera(null, { corda: elem.corda, pos: elem.pos });
+      setTimeout(() => {
+        fermaNota();
+        i++;
+        setTimeout(suonaProssima, 120);
+      }, 450);
+    } else {
+      DisegnaTastiera();
+      setTimeout(() => {
+        i++;
+        suonaProssima();
+      }, 450);
+    }
+  }
+  suonaProssima();
+}
+
+function avviaRegistrazioneEScaricaModale() {
+  inizializzaAudioContext();
+  if (!destinationStreamNode) return;
+
+  registrazioniChunk = [];
+  try {
+    mediaRecorder = new MediaRecorder(destinationStreamNode.stream);
+  } catch (err) {
+    alert("Registrazione audio non supportata in questo browser.");
+    return;
+  }
+
+  mediaRecorder.ondataavailable = (event) => {
+    if (event.data.size > 0) {
+      registrazioniChunk.push(event.data);
+    }
+  };
+
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(registrazioniChunk, { type: 'audio/webm' });
+    const urlAudio = URL.createObjectURL(blob);
+    const linkDownload = document.createElement('a');
+    linkDownload.href = urlAudio;
+    linkDownload.download = 'teorema-geometrico.webm';
+    document.body.appendChild(linkDownload);
+    linkDownload.click();
+    document.body.removeChild(linkDownload);
+  };
+
+  mediaRecorder.start();
+
+  let i = 0;
+  function suonaEregistra() {
+    if (i >= sequenzaModaleCorrente.length) {
+      indiceInRiproduzioneModale = null;
+      disegnaPentagrammaModale();
+      DisegnaTastiera();
+      setTimeout(() => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+      }, 400);
+      return;
+    }
+    indiceInRiproduzioneModale = i;
+    disegnaPentagrammaModale();
+
+    const elem = sequenzaModaleCorrente[i];
+    if (elem.tipo === 'nota') {
+      const nomeCordaChiave = ["E", "A", "D", "G"][elem.corda];
+      const freq = frequenzeBase[nomeCordaChiave][elem.pos];
+      avviaNota(freq);
+      DisegnaTastiera(null, { corda: elem.corda, pos: elem.pos });
+      setTimeout(() => {
+        fermaNota();
+        i++;
+        setTimeout(suonaEregistra, 120);
+      }, 450);
+    } else {
+      DisegnaTastiera();
+      setTimeout(() => {
+        i++;
+        suonaEregistra();
+      }, 450);
+    }
+  }
+  suonaEregistra();
+}
+
+function riproduciSequenzaTeorema(regola) {
+  let i = 0;
+  function suonaProssima() {
+    if (!regola.sequenza || i >= regola.sequenza.length) {
+      DisegnaTastiera(regola.id);
+      return;
+    }
+    const elem = regola.sequenza[i];
+    if (elem.tipo === 'nota') {
+      const nomeCordaChiave = ["E", "A", "D", "G"][elem.corda];
+      const freq = frequenzeBase[nomeCordaChiave][elem.pos];
+      avviaNota(freq);
+      DisegnaTastiera(regola.id, { corda: elem.corda, pos: elem.pos });
+      setTimeout(() => {
+        fermaNota();
+        i++;
+        setTimeout(suonaProssima, 120);
+      }, 450);
+    } else {
+      setTimeout(() => {
+        i++;
+        suonaProssima();
+      }, 450);
+    }
+  }
+  suonaProssima();
+}
+
+const overlayModale = document.getElementById('overlay-modale');
+const inputTitolo = document.getElementById('input-titolo-teorema');
+const inputEnunciato = document.getElementById('input-enunciato-teorema');
+const inputColore = document.getElementById('input-colore-teorema');
+const modaleTitolo = document.getElementById('modale-titolo');
+let indiceTeoremaInModifica = null;
+
+const btnNuovoTeorema = document.getElementById('btn-nuovo-teorema');
+
+btnNuovoTeorema.onclick = () => {
+  indiceTeoremaInModifica = null;
+  modaleTitolo.textContent = "Crea Nuovo Teorema Musicale";
+  inputTitolo.value = "";
+  inputEnunciato.value = "";
+  inputColore.value = "#8e44ad";
+  sequenzaModaleCorrente = [];
+  indiceNotaSelezionataModale = null;
+  overlayModale.style.display = 'flex';
+  disegnaPentagrammaModale();
+};
+
+document.getElementById('btn-chiudi-modale').onclick = () => {
+  overlayModale.style.display = 'none';
+};
+
+function apriModaleModifica(indexCustom) {
+  indiceTeoremaInModifica = indexCustom;
+  const teorema = teoremiCustom[indexCustom];
+  modaleTitolo.textContent = "Modifica Teorema Musicale";
+  inputTitolo.value = teorema.titolo;
+  inputEnunciato.value = teorema.enunciato;
+  inputColore.value = teorema.colore || "#8e44ad";
+  sequenzaModaleCorrente = teorema.sequenza ? [...teorema.sequenza] : [];
+  indiceNotaSelezionataModale = null;
+  
+  overlayModale.style.display = 'flex';
+  disegnaPentagrammaModale();
+}
+
+document.getElementById('btn-salva-modale').onclick = () => {
+  const titolo = inputTitolo.value.trim() || "Teorema Musicale Personalizzato";
+  const enunciato = inputEnunciato.value.trim() || "Nessun enunciato fornito.";
+  const colore = inputColore.value;
+
+  const nuovoOggettoTeorema = {
+    titolo,
+    enunciato,
+    colore,
+    sequenza: [...sequenzaModaleCorrente]
+  };
+
+  if (indiceTeoremaInModifica !== null) {
+    teoremiCustom[indiceTeoremaInModifica] = nuovoOggettoTeorema;
+  } else {
+    teoremiCustom.push(nuovoOggettoTeorema);
+  }
+
+  salvaTeoremiCustomNellUrl();
+  regoleGeometria = [...regoleBase, ...teoremiCustom];
+  popolaLista();
+  overlayModale.style.display = 'none';
+  DisegnaTastiera();
+};
+
+function eliminaTeorema(indexCustom) {
+  if (confirm("Sei sicuro di voler eliminare questo teorema personalizzato?")) {
+    teoremiCustom.splice(indexCustom, 1);
+    salvaTeoremiCustomNellUrl();
+    regoleGeometria = [...regoleBase, ...teoremiCustom];
+    popolaLista();
+    DisegnaTastiera();
+  }
+}
+
+popolaLista();
+DisegnaTastiera();
+</script>
+
+</body>
+</html>
