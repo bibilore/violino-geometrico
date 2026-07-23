@@ -236,7 +236,7 @@ function calcolaDurataEFigura(tempoMs) {
 }
 
 // ==========================================
-// CLASSIFICAZIONE ASSIOMATICA IN ORDINE CRESCENTE NUMERICO
+// CLASSIFICAZIONE ASSIOMATICA E DEDUZIONE
 // ==========================================
 const regoleBaseRaw = [
   { num: 1, gruppo: 1, corda: 3, pos: 0, titolo: "1. Definizione di triangolo", enunciato: "Un triangolo è un insieme di punti del piano costituito da una poligonale chiusa di tre lati e dai suoi punti interni.", colore: "#2980b9" },
@@ -293,29 +293,50 @@ const regoleBaseRaw = [
   { num: 62, gruppo: 3, titolo: "62. Teorema (Punti medi di un trapezio)", enunciato: "Segmento punti medi parallelo e media delle basi.", colore: "#e67e22", dipendenze: [5, 61] }
 ];
 
-// Funzione matematica per l'espansione ricorsiva delle deduzioni
-function costruisciSinfonieLogiche() {
-  const getNoteBase = (num) => {
-    const regola = regoleBaseRaw.find(x => x.num === num);
-    if (!regola) return [];
-    if (regola.gruppo === 1 || regola.gruppo === 2) {
-      return [{ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 800 }];
-    }
-    return regola.sequenza || [];
-  };
+// Ordinamento crescente garantito da 1 a 62
+regoleBaseRaw.sort((a, b) => a.num - b.num);
 
+// Funzione ricorsiva per l'espansione delle deduzioni e l'accumulo dei numeri dei teoremi attraversati
+function espandiDipendenze(num) {
+  const regola = regoleBaseRaw.find(x => x.num === num);
+  if (!regola) return { note: [], numeri: [] };
+  
+  if (regola.gruppo === 1 || regola.gruppo === 2) {
+    return {
+      note: [{ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 800 }],
+      numeri: [num]
+    };
+  }
+  
+  if (regola.gruppo === 3 && regola.dipendenze) {
+    let note = [];
+    let numeri = [];
+    regola.dipendenze.forEach(dip => {
+      const espanso = espandiDipendenze(dip);
+      // Forzatura durata breve ('croma', 450ms) per i teoremi complessi
+      note = note.concat(espanso.note.map(n => ({...n, tipoNota: 'croma', durataMs: 450})));
+      numeri = numeri.concat(espanso.numeri);
+    });
+    return { note, numeri };
+  }
+  return { note: [], numeri: [] };
+}
+
+function costruisciSinfonieLogiche() {
   regoleBaseRaw.forEach(regola => {
     if (regola.gruppo === 3 && regola.dipendenze) {
-      regola.sequenza = [];
+      let noteTotali = [];
+      let numeriTotali = [];
       regola.dipendenze.forEach(dip => {
-        // Applica forzatamente la durata breve ('semicroma', 250ms) a tutte le note delle sinfonie dei teoremi complessi
-        const notes = getNoteBase(dip).map(n => ({...n, tipoNota: 'semicroma', durataMs: 250}));
-        regola.sequenza = regola.sequenza.concat(notes);
+        const espanso = espandiDipendenze(dip);
+        noteTotali = noteTotali.concat(espanso.note.map(n => ({...n, tipoNota: 'croma', durataMs: 450})));
+        numeriTotali = numeriTotali.concat(espanso.numeri);
       });
+      regola.sequenza = noteTotali;
+      regola.sequenzaNumeri = numeriTotali;
     }
   });
 }
-// Esecuzione algoritmo di deduzione logica prima del popolamento UI
 costruisciSinfonieLogiche();
 
 const regoleBase = regoleBaseRaw.map(regola => ({ ...regola, id: 'b' + regola.num }));
@@ -323,11 +344,11 @@ let teoremiCustom = [];
 let regoleGeometria = [...regoleBase];
 
 // ==========================================
-// GESTIONE ARCHIVIO LOCALE
+// GESTIONE ARCHIVIO LOCALE E LOGICA UI
 // ==========================================
 function caricaDaLocale() {
   try {
-    const salvati = localStorage.getItem('violino_geometrico_teoremi_3');
+    const salvati = localStorage.getItem('violino_geometrico_teoremi_4');
     if (salvati) teoremiCustom = JSON.parse(salvati);
     else teoremiCustom = [];
   } catch(e) {
@@ -348,7 +369,7 @@ function salvaInLocale(teorema, isUpdate = false) {
     teoremiCustom.push(teorema);
   }
   try {
-    localStorage.setItem('violino_geometrico_teoremi_3', JSON.stringify(teoremiCustom));
+    localStorage.setItem('violino_geometrico_teoremi_4', JSON.stringify(teoremiCustom));
     chiudiCompositore();
     caricaDaLocale();
   } catch(e) {
@@ -358,13 +379,10 @@ function salvaInLocale(teorema, isUpdate = false) {
 
 function eliminaDaLocale(id) {
   teoremiCustom = teoremiCustom.filter(t => t.id !== id);
-  localStorage.setItem('violino_geometrico_teoremi_3', JSON.stringify(teoremiCustom));
+  localStorage.setItem('violino_geometrico_teoremi_4', JSON.stringify(teoremiCustom));
   caricaDaLocale();
 }
 
-// ==========================================
-// STATO DELL'APP E LOGICA UI
-// ==========================================
 const canvas = document.getElementById('canvasViolino');
 const ctx = canvas.getContext('2d');
 const listaEl = document.getElementById('lista');
@@ -385,6 +403,16 @@ function DOMPurify(str) {
   return div.innerHTML;
 }
 
+function aggiornaEnunciato(regola) {
+  let extraInfo = '';
+  if (regola.sequenzaNumeri && regola.sequenzaNumeri.length > 0) {
+    extraInfo = `<br><br><span style="font-size:0.85em; color:#555;"><strong>Sequenza di regole utilizzate:</strong> [${regola.sequenzaNumeri.join(', ')}]</span>`;
+  }
+  enunciatoEl.style.display = 'block';
+  enunciatoEl.innerHTML = `<strong>${DOMPurify(regola.titolo)}</strong>${DOMPurify(regola.enunciato)}${extraInfo}`;
+  enunciatoEl.style.borderLeftColor = regola.colore;
+}
+
 function popolaLista() {
   listaEl.innerHTML = '';
   
@@ -397,7 +425,6 @@ function popolaLista() {
     spanTesto.textContent = regola.titolo;
     spanTesto.style.flexGrow = '1';
     
-    // Implementazione del colore blu per regole dei Gruppi 1 e 2
     if (regola.gruppo === 1 || regola.gruppo === 2) {
       spanTesto.style.color = '#2980b9';
     }
@@ -433,9 +460,7 @@ function popolaLista() {
 
     spanTesto.addEventListener('mouseenter', () => {
       if (regolaSelezionataId !== regola.id) {
-        enunciatoEl.style.display = 'block';
-        enunciatoEl.innerHTML = `<strong>${DOMPurify(regola.titolo)}</strong>${DOMPurify(regola.enunciato)}`;
-        enunciatoEl.style.borderLeftColor = regola.colore;
+        aggiornaEnunciato(regola);
         DisegnaTastiera(regola.id);
       }
     });
@@ -445,6 +470,9 @@ function popolaLista() {
         if (!regolaSelezionataId) {
           enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.`;
           enunciatoEl.style.borderLeftColor = "#ccc";
+        } else {
+          const regolaSelezionata = regoleGeometria.find(r => r.id === regolaSelezionataId);
+          if (regolaSelezionata) aggiornaEnunciato(regolaSelezionata);
         }
         DisegnaTastiera(regolaSelezionataId);
       }
@@ -455,9 +483,7 @@ function popolaLista() {
       regolaSelezionataId = regola.id;
       popolaLista();
       
-      enunciatoEl.style.display = 'block';
-      enunciatoEl.innerHTML = `<strong>${DOMPurify(regola.titolo)}</strong>${DOMPurify(regola.enunciato)}`;
-      enunciatoEl.style.borderLeftColor = regola.colore;
+      aggiornaEnunciato(regola);
       DisegnaTastiera(regola.id);
 
       if (inModalitaCreazioneNuovo) {
@@ -554,8 +580,7 @@ canvas.addEventListener('mousemove', (e) => {
     canvas.style.cursor = 'pointer';
     const regolaTrovata = regoleGeometria.find(r => r.corda === trovatoHover.corda && r.pos === trovatoHover.pos && (r.gruppo === 1 || r.gruppo === 2));
     if (regolaTrovata) {
-      enunciatoEl.innerHTML = `<strong>${DOMPurify(regolaTrovata.titolo)}</strong>${DOMPurify(regolaTrovata.enunciato)}`;
-      enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
+      aggiornaEnunciato(regolaTrovata);
       DisegnaTastiera(regolaTrovata.id);
     } else {
       DisegnaTastiera(regolaSelezionataId);
@@ -569,6 +594,13 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseleave', () => {
   canvas.style.cursor = 'default';
   DisegnaTastiera(regolaSelezionataId);
+  if (regolaSelezionataId) {
+    const regolaSelezionata = regoleGeometria.find(r => r.id === regolaSelezionataId);
+    if (regolaSelezionata) aggiornaEnunciato(regolaSelezionata);
+  } else {
+    enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.`;
+    enunciatoEl.style.borderLeftColor = "#ccc";
+  }
 });
 
 canvas.addEventListener('mousedown', (e) => {
@@ -611,9 +643,7 @@ window.addEventListener('mouseup', () => {
       if (regolaTrovata) {
         regolaSelezionataId = regolaTrovata.id;
         popolaLista();
-        enunciatoEl.style.display = 'block';
-        enunciatoEl.innerHTML = `<strong>${DOMPurify(regolaTrovata.titolo)}</strong>${DOMPurify(regolaTrovata.enunciato)}`;
-        enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
+        aggiornaEnunciato(regolaTrovata);
         DisegnaTastiera(regolaTrovata.id);
       }
     }
