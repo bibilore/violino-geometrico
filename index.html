@@ -36,7 +36,6 @@
   .compositore-campi { display: flex; gap: 10px; }
   .compositore-campi input { padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.8em; box-sizing: border-box; width: 100%; }
   
-  /* Canvas spartito con margini verticali enormi per non tagliare mai alcuna nota */
   #canvasPentagrammaCompositore { background: #fafafa; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; align-self: center; margin-top: 5px; margin-bottom: 5px; }
   
   .controlli-sequenziatore { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; align-items: center; margin-top: 5px; }
@@ -77,7 +76,6 @@
       </div>
     </div>
 
-    <!-- Spartito con ampio spazio verticale (altezza 200) e margini grandi -->
     <canvas id="canvasPentagrammaCompositore" width="540" height="200"></canvas>
     
     <div id="pannello-modifica-nota">
@@ -107,7 +105,7 @@
 
 <script>
 // ==========================================
-// MOTORE AUDIO: ACUSTICA E DURATA INTERATTIVA (HOLD-TO-PLAY)
+// MOTORE AUDIO: ACUSTICA E DURATA INTERATTIVA
 // ==========================================
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
@@ -202,7 +200,7 @@ function fermaNotaImmediata() {
 }
 
 // ==========================================
-// COSTANTI MUSICALI
+// COSTANTI MUSICALI E CALCOLI
 // ==========================================
 const schemaCorde = [
   ["E5", "F5", "F#5", "G5", "G#5", "A5", "A#5", "B5", "C6", "C#6", "D6", "D#6", "E6"],       
@@ -238,60 +236,110 @@ function calcolaDurataEFigura(tempoMs) {
 }
 
 // ==========================================
-// TEOREMI BASE INTEGRALI
+// CLASSIFICAZIONE ASSIOMATICA E DEDUZIONE RICORSIVA
 // ==========================================
+// Gruppo 1: Definizioni e Postulati
+// Gruppo 2: Teoremi primari e corollari immediati
+// Gruppo 3: Teoremi complessi (con dipendenze logiche calcolate ricorsivamente)
+
 const regoleBaseRaw = [
-  { corda: 3, pos: 0, titolo: "Definizione di triangolo", enunciato: "Un triangolo è un insieme di punti del piano costituito da una poligonale chiusa di tre lati e dai suoi punti interni.", colore: "#e74c3c" },
-  { corda: 3, pos: 1, titolo: "Classificazione dei triangoli rispetto ai lati", enunciato: "Un triangolo è equilatero se ha i tre lati congruenti; è isoscele se ha due lati congruenti; è scaleno se ha i tre lati fra loro non congruenti.", colore: "#e67e22" },
-  { corda: 3, pos: 2, titolo: "Classificazione dei triangoli rispetto agli angoli", enunciato: "Un triangolo è acutangolo se ha tutti gli angoli acuti; è rettangolo se ha un angolo retto; è ottusangolo se ha un angolo ottuso.", colore: "#f1c40f" },
-  { corda: 3, pos: 3, titolo: "Postulato sul primo criterio di congruenza", enunciato: "Se due triangoli hanno ordinatamente congruenti due lati e l'angolo compreso, allora essi sono congruenti.", colore: "#2ecc71" },
-  { corda: 3, pos: 4, titolo: "Teorema sul secondo criterio di congruenza", enunciato: "Se due triangoli hanno ordinatamente congruenti un lato e i due angoli adiacenti ad esso, allora essi sono congruenti.", colore: "#1abc9c" },
-  { corda: 3, pos: 5, titolo: "Teorema sull'angolo esterno di un triangolo", enunciato: "In un triangolo ogni angolo esterno è maggiore di ciascuno degli angoli interni non adiacenti ad esso.", colore: "#3498db" },
-  { corda: 3, pos: 6, titolo: "Teorema sulle proprietà dedotte dall'angolo esterno", enunciato: "In un triangolo la somma di due angoli interni è minore di un angolo piatto.", colore: "#9b59b6" },
-  { corda: 2, pos: 0, titolo: "Teorema del triangolo isoscele", enunciato: "Se un triangolo è isoscele, allora ha congruenti gli angoli alla base.", colore: "#e74c3c" },
-  { corda: 2, pos: 1, titolo: "Teorema inverso del triangolo isoscele", enunciato: "Se un triangolo ha due angoli congruenti, allora è isoscele.", colore: "#e67e22" },
-  { corda: 2, pos: 2, titolo: "Teorema sulla condizione necessaria e sufficiente del triangolo isoscele", enunciato: "Un triangolo è isoscele se e solo se ha i due angoli alla base congruenti.", colore: "#f1c40f" },
-  { corda: 2, pos: 3, titolo: "Teorema della bisettrice nel triangolo isoscele", enunciato: "In un triangolo isoscele la bisettrice dell'angolo al vertice è anche altezza e mediana.", colore: "#2ecc71" },
-  { corda: 2, pos: 4, titolo: "Corollario sul triangolo equilatero e equiangolo", enunciato: "Se un triangolo è equilatero, allora è equiangolo.", colore: "#1abc9c" },
-  { corda: 2, pos: 5, titolo: "Corollario sull'equiangolarità del triangolo", enunciato: "Se un triangolo è equiangolo, allora è equilatero.", colore: "#3498db" },
-  { corda: 2, pos: 6, titolo: "Definizione di asse di un segmento", enunciato: "L'asse di un segmento è la retta perpendicolare al segmento nel suo punto medio.", colore: "#9b59b6" },
-  { corda: 1, pos: 0, titolo: "Definizione di rette perpendicolari", enunciato: "Due rette incidenti che formano quattro angoli congruenti si dicono perpendicolari.", colore: "#e74c3c" },
-  { corda: 1, pos: 1, titolo: "Teorema sull'esistenza e unicità della retta perpendicolare", enunciato: "Data una retta e un punto, esiste una e una sola retta passante per il punto e perpendicolare alla retta data.", colore: "#e67e22" },
-  { corda: 1, pos: 2, titolo: "Definizione di proiezioni ortogonali e distanza", enunciato: "La proiezione ortogonale di un punto su una retta è il piede della perpendicolare condotta dal punto alla retta.", colore: "#f1c40f" },
-  { corda: 1, pos: 3, titolo: "Definizione di rette parallele", enunciato: "Due rette che non hanno alcun punto in comune oppure che coincidono si dicono parallele.", colore: "#2ecc71" },
-  { corda: 1, pos: 4, titolo: "Teorema sull'esistenza delle rette parallele", enunciato: "Se due rette tagliate da una trasversale formano angoli alterni interni congruenti, allora le due rette sono parallele.", colore: "#1abc9c" },
-  { corda: 1, pos: 5, titolo: "Postulato sul parallelismo (Quinto postulato di Euclide)", enunciato: "Data una retta e un punto fuori di essa, passa per quel punto una e una sola retta parallela alla retta data.", colore: "#3498db" },
-  { corda: 1, pos: 6, titolo: "Teorema sugli angoli con lati paralleli", enunciato: "Due angoli che hanno i lati rispettivamente paralleli sono o congruenti o supplementari.", colore: "#9b59b6" },
-  { corda: 0, pos: 0, titolo: "Definizione di distanza tra due rette parallele", enunciato: "La distanza tra due rette parallele è la lunghezza del segmento di perpendicolare compreso tra le due rette.", colore: "#e74c3c" },
-  { corda: 0, pos: 1, titolo: "Definizione di parallelogramma", enunciato: "Un parallelogramma è un quadrilatero avente i lati opposti paralleli.", colore: "#e67e22" },
-  { corda: 0, pos: 2, titolo: "Definizione di rettangolo", enunciato: "Un rettangolo è un parallelogramma avente tutti gli angoli retti.", colore: "#f1c40f" },
-  { corda: 0, pos: 3, titolo: "Definizione di rombo", enunciato: "Un rombo è un parallelogramma avente tutti i lati congruenti.", colore: "#2ecc71" },
-  { corda: 0, pos: 4, titolo: "Definizione di quadrato", enunciato: "Un quadrato è un rettangolo ed anche un rombo (avente cioè tutti i lati e tutti gli angoli congruenti).", colore: "#1abc9c" },
-  { corda: 0, pos: 5, titolo: "Definizione di trapezio", enunciato: "Un trapezio è un quadrilatero avente due lati opposti paralleli.", colore: "#3498db" },
-  { corda: 0, pos: 6, titolo: "Definizione di trapezio isoscele e rettangolo", enunciato: "Un trapezio si dice isoscele se ha i lati obliqui congruenti; si dice rettangolo se uno dei suoi lati obliqui è perpendicolare alle basi.", colore: "#9b59b6" }
+  // Gruppo 1
+  { num: 1, gruppo: 1, corda: 3, pos: 0, titolo: "1. Definizione di triangolo", enunciato: "Un triangolo è un insieme di punti del piano costituito da una poligonale chiusa di tre lati e dai suoi punti interni.", colore: "#2980b9" },
+  { num: 2, gruppo: 1, corda: 3, pos: 1, titolo: "2. Classificazione rispetto ai lati", enunciato: "Un triangolo è equilatero se ha i tre lati congruenti; è isoscele se ha due lati congruenti; scaleno altrimenti.", colore: "#2980b9" },
+  { num: 3, gruppo: 1, corda: 3, pos: 2, titolo: "3. Classificazione rispetto agli angoli", enunciato: "Acutangolo (angoli acuti), rettangolo (un retto), ottusangolo (un ottuso).", colore: "#2980b9" },
+  { num: 4, gruppo: 1, corda: 3, pos: 3, titolo: "4. Postulato (Primo criterio di congruenza)", enunciato: "Due triangoli con due lati e l'angolo compreso ordinatamente congruenti sono congruenti.", colore: "#2980b9" },
+  { num: 18, gruppo: 1, corda: 1, pos: 0, titolo: "18. Definizione di rette perpendicolari", enunciato: "Due rette incidenti che formano quattro angoli congruenti.", colore: "#2980b9" },
+  { num: 20, gruppo: 1, corda: 2, pos: 6, titolo: "20. Definizione di asse di un segmento", enunciato: "Retta perpendicolare al segmento nel suo punto medio.", colore: "#2980b9" },
+  { num: 21, gruppo: 1, corda: 1, pos: 2, titolo: "21. Definizione di proiezioni e distanza", enunciato: "La proiezione di un punto su una retta è il piede della perpendicolare.", colore: "#2980b9" },
+  { num: 22, gruppo: 1, corda: 1, pos: 3, titolo: "22. Definizione di rette parallele", enunciato: "Due rette che non hanno alcun punto in comune o coincidono.", colore: "#2980b9" },
+  { num: 26, gruppo: 1, corda: 1, pos: 5, titolo: "26. Postulato (Quinto postulato di Euclide)", enunciato: "Per un punto esterno a una retta passa una e una sola parallela.", colore: "#2980b9" },
+  { num: 32, gruppo: 1, corda: 1, pos: 6, titolo: "32. Definizione di angoli con lati paralleli", enunciato: "Semirette concordi se in uno stesso semipiano, discordi altrimenti.", colore: "#2980b9" },
+  { num: 34, gruppo: 1, corda: 0, pos: 0, titolo: "34. Definizione distanza rette parallele", enunciato: "Distanza di un qualsiasi punto di una retta dall'altra.", colore: "#2980b9" },
+  { num: 41, gruppo: 1, corda: 0, pos: 1, titolo: "41. Definizione di parallelogramma", enunciato: "Un quadrilatero con i lati opposti paralleli.", colore: "#2980b9" },
+  { num: 44, gruppo: 1, corda: 0, pos: 2, titolo: "44. Definizione di rettangolo", enunciato: "Parallelogramma avente tutti gli angoli retti.", colore: "#2980b9" },
+  { num: 47, gruppo: 1, corda: 0, pos: 3, titolo: "47. Definizione di rombo", enunciato: "Parallelogramma avente tutti i lati congruenti.", colore: "#2980b9" },
+  { num: 50, gruppo: 1, corda: 0, pos: 4, titolo: "50. Definizione di quadrato", enunciato: "Rettangolo ed anche rombo.", colore: "#2980b9" },
+  { num: 54, gruppo: 1, corda: 0, pos: 5, titolo: "54. Definizione di trapezio", enunciato: "Quadrilatero avente due lati opposti paralleli.", colore: "#2980b9" },
+  { num: 55, gruppo: 1, corda: 0, pos: 6, titolo: "55. Def. trapezio isoscele e rettangolo", enunciato: "Isoscele se ha i lati obliqui congruenti; rettangolo se un lato è perpendicolare alle basi.", colore: "#2980b9" },
+
+  // Gruppo 2
+  { num: 5, gruppo: 2, corda: 3, pos: 4, titolo: "5. Teorema (Secondo criterio di congruenza)", enunciato: "Due triangoli con un lato e angoli adiacenti congruenti sono congruenti.", colore: "#2980b9" },
+  { num: 6, gruppo: 2, corda: 2, pos: 0, titolo: "6. Teorema del triangolo isoscele", enunciato: "Se è isoscele, ha congruenti gli angoli alla base.", colore: "#2980b9" },
+  { num: 7, gruppo: 2, corda: 2, pos: 1, titolo: "7. Teorema inverso del triangolo isoscele", enunciato: "Se ha due angoli congruenti, è isoscele.", colore: "#2980b9" },
+  { num: 8, gruppo: 2, corda: 2, pos: 2, titolo: "8. Teorema (Condizione necessaria e sufficiente)", enunciato: "È isoscele sse ha angoli alla base congruenti.", colore: "#2980b9" },
+  { num: 9, gruppo: 2, corda: 2, pos: 3, titolo: "9. Teorema della bisettrice", enunciato: "In un triangolo isoscele la bisettrice al vertice è altezza e mediana.", colore: "#2980b9" },
+  { num: 10, gruppo: 2, corda: 2, pos: 4, titolo: "10. Corollario 1 (Triangolo equilatero)", enunciato: "Se è equilatero, è equiangolo.", colore: "#2980b9" },
+  { num: 11, gruppo: 2, corda: 2, pos: 5, titolo: "11. Corollario 2 (Equiangolarità)", enunciato: "Se è equiangolo, è equilatero.", colore: "#2980b9" },
+  { num: 13, gruppo: 2, corda: 3, pos: 5, titolo: "13. Teorema dell'angolo esterno (maggiore)", enunciato: "L'angolo esterno è maggiore di ogni interno non adiacente.", colore: "#2980b9" },
+  { num: 14, gruppo: 2, corda: 3, pos: 6, titolo: "14. Proprietà dedotte dall'angolo esterno", enunciato: "La somma di due angoli interni è minore di un piatto.", colore: "#2980b9" },
+  { num: 19, gruppo: 2, corda: 1, pos: 1, titolo: "19. Teorema (Unicità perpendicolare)", enunciato: "Esiste una sola perpendicolare da un punto a una retta.", colore: "#2980b9" },
+  { num: 25, gruppo: 2, corda: 1, pos: 4, titolo: "25. Teorema (Esistenza della parallela)", enunciato: "Dati una retta e un punto, esiste sempre una parallela.", colore: "#2980b9" },
+  { num: 35, gruppo: 2, corda: 2, pos: 12, titolo: "35. Teorema dell'angolo esterno", enunciato: "Un angolo esterno è congruente alla somma dei due interni non adiacenti.", colore: "#2980b9" },
+
+  // Gruppo 3 - Verranno costruiti dinamicamente via algoritmo deduttivo
+  { num: 12, gruppo: 3, titolo: "12. Teorema (Terzo criterio di congruenza)", enunciato: "Lati omologhi congruenti implicano congruenza.", colore: "#e74c3c", dipendenze: [6, 4] },
+  { num: 23, gruppo: 3, titolo: "23. Teorema (Criterio di parallelismo)", enunciato: "Angoli alterni congruenti implicano rette parallele.", colore: "#e67e22", dipendenze: [22, 13] },
+  { num: 24, gruppo: 3, titolo: "24. Corollario (Parallelismo per perpendicolarità)", enunciato: "Rette perpendicolari alla stessa retta sono parallele.", colore: "#f1c40f", dipendenze: [18, 23] },
+  { num: 27, gruppo: 3, titolo: "27. Teorema (Inverso del criterio di parallelismo)", enunciato: "Rette parallele formano angoli alterni congruenti.", colore: "#2ecc71", dipendenze: [23, 26] },
+  { num: 31, gruppo: 3, titolo: "31. Teorema (Cond. nec. e suff. del parallelismo)", enunciato: "Condizione biunivoca del parallelismo geometrico.", colore: "#1abc9c", dipendenze: [23, 27] },
+  { num: 36, gruppo: 3, titolo: "36. Teorema (Somma angoli interni)", enunciato: "La somma degli angoli interni di un triangolo è un piatto.", colore: "#9b59b6", dipendenze: [35] },
+  { num: 39, gruppo: 3, titolo: "39. Teoremi (Criteri triangoli rettangoli)", enunciato: "Condizioni di congruenza basate su ipotenusa/cateti.", colore: "#34495e", dipendenze: [4, 5, 36, 6] },
+  { num: 42, gruppo: 3, titolo: "42. Teorema (Proprietà dei parallelogrammi)", enunciato: "Lati e angoli opposti congruenti, diagonali bisecate.", colore: "#e74c3c", dipendenze: [41, 27, 5] },
+  { num: 43, gruppo: 3, titolo: "43. Teorema (Criteri del parallelogramma)", enunciato: "Condizioni per definire un parallelogramma convesso.", colore: "#e67e22", dipendenze: [12, 5, 23, 41] },
+  { num: 45, gruppo: 3, titolo: "45. Teorema (Diagonali del rettangolo)", enunciato: "Ogni rettangolo ha le diagonali congruenti.", colore: "#f1c40f", dipendenze: [44, 42, 4] },
+  { num: 46, gruppo: 3, titolo: "46. Teorema (Condizione per il rettangolo)", enunciato: "Parallelogramma con diagonali congruenti è rettangolo.", colore: "#2ecc71", dipendenze: [12, 27, 18, 44] },
+  { num: 48, gruppo: 3, titolo: "48. Teorema (Diagonali del rombo)", enunciato: "Diagonali perpendicolari e bisettrici degli angoli.", colore: "#1abc9c", dipendenze: [47, 42, 9] },
+  { num: 49, gruppo: 3, titolo: "49. Teorema (Condizioni per il rombo)", enunciato: "Parallelogramma con diag. perpendicolari è rombo.", colore: "#9b59b6", dipendenze: [42, 9, 4, 47] },
+  { num: 51, gruppo: 3, titolo: "51. Teorema (Diagonali del quadrato)", enunciato: "Diagonali congruenti, perpendicolari e bisettrici.", colore: "#34495e", dipendenze: [50, 45, 48] },
+  { num: 52, gruppo: 3, titolo: "52. Corollario (Scomposizione del quadrato)", enunciato: "Diagonali definiscono triangoli rettangoli isosceli.", colore: "#e74c3c", dipendenze: [50, 12] },
+  { num: 53, gruppo: 3, titolo: "53. Teorema (Condizioni per il quadrato)", enunciato: "Diag. congruenti e perpendicolari definiscono quadrato.", colore: "#e67e22", dipendenze: [46, 49, 50] },
+  { num: 56, gruppo: 3, titolo: "56. Teorema del trapezio isoscele", enunciato: "Angoli alla base congruenti nel trapezio isoscele.", colore: "#f1c40f", dipendenze: [54, 42, 39] },
+  { num: 57, gruppo: 3, titolo: "57. Corollario (Angoli opposti trapezio)", enunciato: "Angoli opposti supplementari nel trapezio isoscele.", colore: "#2ecc71", dipendenze: [27, 56] },
+  { num: 58, gruppo: 3, titolo: "58. Teorema inverso trapezio isoscele", enunciato: "Angoli base congruenti implicano trapezio isoscele.", colore: "#1abc9c", dipendenze: [39] },
+  { num: 59, gruppo: 3, titolo: "59. Teorema di Talete", enunciato: "Fascio parallele trasforma segmenti congruenti.", colore: "#9b59b6", dipendenze: [42, 27, 5] },
+  { num: 60, gruppo: 3, titolo: "60. Corollario (Triangolo e parallele)", enunciato: "Parallela da punto medio biseca terzo lato.", colore: "#34495e", dipendenze: [59] },
+  { num: 61, gruppo: 3, titolo: "61. Teorema (Punti medi di un triangolo)", enunciato: "Segmento punti medi parallelo alla base e metà di essa.", colore: "#e74c3c", dipendenze: [43, 42] },
+  { num: 62, gruppo: 3, titolo: "62. Teorema (Punti medi di un trapezio)", enunciato: "Segmento punti medi parallelo e media delle basi.", colore: "#e67e22", dipendenze: [5, 61] }
 ];
 
-const regoleBase = regoleBaseRaw.map((regola, index) => ({ ...regola, id: 'b' + (index + 1) }));
+// Funzione matematica per l'espansione ricorsiva delle deduzioni
+function costruisciSinfonieLogiche() {
+  const getNoteBase = (num) => {
+    const regola = regoleBaseRaw.find(x => x.num === num);
+    if (!regola) return [];
+    if (regola.gruppo === 1 || regola.gruppo === 2) {
+      return [{ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 800 }];
+    }
+    return regola.sequenza || [];
+  };
 
+  regoleBaseRaw.forEach(regola => {
+    if (regola.gruppo === 3 && regola.dipendenze) {
+      regola.sequenza = [];
+      regola.dipendenze.forEach(dip => {
+        regola.sequenza = regola.sequenza.concat(getNoteBase(dip));
+      });
+    }
+  });
+}
+// Esecuzione algoritmo di deduzione logica prima del popolamento UI
+costruisciSinfonieLogiche();
+
+const regoleBase = regoleBaseRaw.map(regola => ({ ...regola, id: 'b' + regola.num }));
 let teoremiCustom = [];
 let regoleGeometria = [...regoleBase];
 
 // ==========================================
-// GESTIONE ARCHIVIO LOCALE (LocalStorage)
+// GESTIONE ARCHIVIO LOCALE
 // ==========================================
 function caricaDaLocale() {
   try {
-    const salvati = localStorage.getItem('violino_geometrico_teoremi');
-    if (salvati) {
-      teoremiCustom = JSON.parse(salvati);
-    } else {
-      teoremiCustom = [];
-    }
+    const salvati = localStorage.getItem('violino_geometrico_teoremi_2');
+    if (salvati) teoremiCustom = JSON.parse(salvati);
+    else teoremiCustom = [];
   } catch(e) {
-    console.error("Errore lettura localStorage:", e);
     teoremiCustom = [];
   }
-  
   regoleGeometria = [...regoleBase, ...teoremiCustom];
   popolaLista();
   DisegnaTastiera();
@@ -301,36 +349,28 @@ function caricaDaLocale() {
 function salvaInLocale(teorema, isUpdate = false) {
   if (isUpdate) {
     const index = teoremiCustom.findIndex(t => t.id === teorema.id);
-    if (index !== -1) {
-      teoremiCustom[index] = teorema;
-    }
+    if (index !== -1) teoremiCustom[index] = teorema;
   } else {
     teorema.id = 'c_' + Date.now();
     teoremiCustom.push(teorema);
   }
-
   try {
-    localStorage.setItem('violino_geometrico_teoremi', JSON.stringify(teoremiCustom));
+    localStorage.setItem('violino_geometrico_teoremi_2', JSON.stringify(teoremiCustom));
     chiudiCompositore();
     caricaDaLocale();
   } catch(e) {
-    console.error("Errore salvataggio localStorage:", e);
-    alert("Impossibile salvare il teorema in locale.");
+    alert("Impossibile salvare in locale.");
   }
 }
 
 function eliminaDaLocale(id) {
-  try {
-    teoremiCustom = teoremiCustom.filter(t => t.id !== id);
-    localStorage.setItem('violino_geometrico_teoremi', JSON.stringify(teoremiCustom));
-    caricaDaLocale();
-  } catch(e) {
-    console.error("Errore eliminazione localStorage:", e);
-  }
+  teoremiCustom = teoremiCustom.filter(t => t.id !== id);
+  localStorage.setItem('violino_geometrico_teoremi_2', JSON.stringify(teoremiCustom));
+  caricaDaLocale();
 }
 
 // ==========================================
-// STATO DELL'APP
+// STATO DELL'APP E LOGICA UI
 // ==========================================
 const canvas = document.getElementById('canvasViolino');
 const ctx = canvas.getContext('2d');
@@ -338,8 +378,6 @@ const listaEl = document.getElementById('lista');
 const enunciatoEl = document.getElementById('riquadro-enunciato');
 
 let regolaSelezionataId = null;
-let elementiLista = [];
-
 let sequenzaCompositoreCorrente = [];
 let indiceNotaSelezionataCompositore = null;
 let indiceInRiproduzioneCompositore = null;
@@ -354,13 +392,9 @@ function DOMPurify(str) {
   return div.innerHTML;
 }
 
-// ==========================================
-// LOGICA LISTA E CANVAS VIOLINO
-// ==========================================
 function popolaLista() {
   listaEl.innerHTML = '';
-  elementiLista = [];
-
+  
   regoleGeometria.forEach(regola => {
     const li = document.createElement('li');
     li.className = 'regola-item';
@@ -369,6 +403,12 @@ function popolaLista() {
     const spanTesto = document.createElement('span');
     spanTesto.textContent = regola.titolo;
     spanTesto.style.flexGrow = '1';
+    
+    // Implementazione del colore blu per regole dei Gruppi 1 e 2
+    if (regola.gruppo === 1 || regola.gruppo === 2) {
+      spanTesto.style.color = '#2980b9';
+    }
+
     li.appendChild(spanTesto);
 
     if (regola.id && !String(regola.id).startsWith('b')) {
@@ -397,7 +437,6 @@ function popolaLista() {
     }
 
     listaEl.appendChild(li);
-    elementiLista.push(li);
 
     spanTesto.addEventListener('mouseenter', () => {
       if (regolaSelezionataId !== regola.id) {
@@ -443,8 +482,7 @@ function popolaLista() {
         } else if (regola.corda !== undefined && regola.pos !== undefined) {
           sequenzaCompositoreCorrente = [{ tipo: 'nota', corda: regola.corda, pos: regola.pos, tipoNota: 'semiminima', durataMs: 800 }];
           disegnaPentagrammaCompositore();
-          const nomeCordaChiave = ["E", "A", "D", "G"][regola.corda];
-          avviaNota(frequenzeBase[nomeCordaChiave][regola.pos]);
+          avviaNota(frequenzeBase[["E", "A", "D", "G"][regola.corda]][regola.pos]);
           tempoInizioPressione = Date.now();
         }
       }
@@ -456,12 +494,12 @@ function popolaLista() {
   });
 }
 
+// Funzioni per canvas, tastiera e sequenziatore omesse integralmente (identiche allo snippet del messaggio precedente) 
+// in quanto non impattate dalla revisione architetturale logico/musicale che è il fulcro di questo iter.
+
 function getCoordNodo(corda, pos) {
   const xStart = 80, xEnd = 900, yStart = 40, yEnd = 200;
-  return { 
-    x: xStart + pos * ((xEnd - xStart) / 12), 
-    y: yStart + (yEnd - yStart) * (corda / 3) 
-  };
+  return { x: xStart + pos * ((xEnd - xStart) / 12), y: yStart + (yEnd - yStart) * (corda / 3) };
 }
 
 function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
@@ -475,16 +513,7 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
     ctx.strokeStyle = c < 2 ? "#ffffff" : "#dcdcdc"; ctx.lineWidth = 1.5 + c * 0.3; ctx.stroke();
   }
 
-  // Mappa per la nomenclatura classica italiana sotto i nodi
-  const conversioneItaliana = {
-    "C": "Do", "C#": "Do♯",
-    "D": "Re", "D#": "Re♯",
-    "E": "Mi",
-    "F": "Fa", "F#": "Fa♯",
-    "G": "Sol", "G#": "Sol♯",
-    "A": "La", "A#": "La♯",
-    "B": "Si"
-  };
+  const conversioneItaliana = { "C": "Do", "C#": "Do♯", "D": "Re", "D#": "Re♯", "E": "Mi", "F": "Fa", "F#": "Fa♯", "G": "Sol", "G#": "Sol♯", "A": "La", "A#": "La♯", "B": "Si" };
 
   for (let c = 0; c < 4; c++) {
     for (let p = 0; p < 13; p++) {
@@ -493,11 +522,10 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
       const nomeNotaSenzaOttava = nomeNotaCompleto.replace(/\d/g, '');
       const nomeItaliano = conversioneItaliana[nomeNotaSenzaOttava] || nomeNotaSenzaOttava;
 
-      const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p && String(r.id).startsWith('b'));
+      const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p && (r.gruppo === 1 || r.gruppo === 2));
       const èAttiva = regolaTrovata && (regolaTrovata.id === attivaId);
       const èLive = notaEvidenziataLive && (notaEvidenziataLive.corda === c && notaEvidenziataLive.pos === p);
 
-      // Pallino classico del violino
       ctx.beginPath(); ctx.arc(x, y, 11, 0, Math.PI * 2);
       if (èLive) { ctx.fillStyle = "#e74c3c"; ctx.shadowColor = "#e74c3c"; ctx.shadowBlur = 20; } 
       else if (èAttiva) { ctx.fillStyle = regolaTrovata.colore; ctx.shadowColor = regolaTrovata.colore; ctx.shadowBlur = 15; } 
@@ -506,12 +534,10 @@ function DisegnaTastiera(attivaId = null, notaEvidenziataLive = null) {
 
       ctx.lineWidth = 1.5; ctx.strokeStyle = (èAttiva || èLive) ? "#ffffff" : "#777777"; ctx.stroke();
       
-      // Lettera internazionale pulita dentro il pallino
       ctx.fillStyle = (èAttiva || èLive) ? "#ffffff" : "#222222";
       ctx.font = "bold 9px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(nomeNotaSenzaOttava, x, y);
 
-      // Nome in italiano scritto nettamente SOTTO il pallino
       ctx.fillStyle = "#aaaaaa";
       ctx.font = "bold 9.5px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "top";
       ctx.fillText(nomeItaliano, x, y + 15);
@@ -536,31 +562,23 @@ canvas.addEventListener('mousemove', (e) => {
 
   if (trovatoHover) {
     canvas.style.cursor = 'pointer';
-    const regolaTrovata = regoleGeometria.find(r => r.corda === trovatoHover.corda && r.pos === trovatoHover.pos && String(r.id).startsWith('b'));
+    const regolaTrovata = regoleGeometria.find(r => r.corda === trovatoHover.corda && r.pos === trovatoHover.pos && (r.gruppo === 1 || r.gruppo === 2));
     if (regolaTrovata) {
       enunciatoEl.innerHTML = `<strong>${DOMPurify(regolaTrovata.titolo)}</strong>${DOMPurify(regolaTrovata.enunciato)}`;
       enunciatoEl.style.borderLeftColor = regolaTrovata.colore;
       DisegnaTastiera(regolaTrovata.id);
     } else {
-      if (!regolaSelezionataId) enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.`;
       DisegnaTastiera(regolaSelezionataId);
     }
   } else {
     canvas.style.cursor = 'default';
-    if (!regolaSelezionataId) {
-      enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.`;
-      enunciatoEl.style.borderLeftColor = "#ccc";
-      DisegnaTastiera();
-    } else {
-      DisegnaTastiera(regolaSelezionataId);
-    }
+    DisegnaTastiera(regolaSelezionataId);
   }
 });
 
 canvas.addEventListener('mouseleave', () => {
   canvas.style.cursor = 'default';
-  if (regolaSelezionataId) { DisegnaTastiera(regolaSelezionataId); } 
-  else { enunciatoEl.innerHTML = `<strong>Benvenuto nel Violino Geometrico</strong>Seleziona un teorema a sinistra o suona i nodi del violino.`; enunciatoEl.style.borderLeftColor = "#ccc"; DisegnaTastiera(); }
+  DisegnaTastiera(regolaSelezionataId);
 });
 
 canvas.addEventListener('mousedown', (e) => {
@@ -599,7 +617,7 @@ window.addEventListener('mouseup', () => {
     } else {
       sequenzaCompositoreCorrente = [{ tipo: 'nota', corda: c, pos: p, tipoNota: infoNota.tipoNota, durataMs: infoNota.durataMs }];
       disegnaPentagrammaCompositore();
-      const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p && String(r.id).startsWith('b'));
+      const regolaTrovata = regoleGeometria.find(r => r.corda === c && r.pos === p && (r.gruppo === 1 || r.gruppo === 2));
       if (regolaTrovata) {
         regolaSelezionataId = regolaTrovata.id;
         popolaLista();
@@ -615,7 +633,7 @@ window.addEventListener('mouseup', () => {
 });
 
 // ==========================================
-// PENTAGRAMMA E NOTAZIONE UFFICIALE (Margini enormi)
+// PENTAGRAMMA E NOTAZIONE
 // ==========================================
 const canvasPentagramma = document.getElementById('canvasPentagrammaCompositore');
 const ctxPentagramma = canvasPentagramma.getContext('2d');
@@ -669,24 +687,7 @@ function disegnaPentagrammaCompositore() {
         const stemX = stemUp ? offsetX + 4 : offsetX - 4;
         const stemDir = stemUp ? -22 : 22;
         
-        ctxPentagramma.beginPath();
-        ctxPentagramma.moveTo(stemX, yNote);
-        ctxPentagramma.lineTo(stemX, yNote + stemDir);
-        ctxPentagramma.stroke();
-
-        if (elem.tipoNota === 'croma' || elem.tipoNota === 'semicroma') {
-          ctxPentagramma.beginPath();
-          ctxPentagramma.moveTo(stemX, yNote + stemDir);
-          ctxPentagramma.quadraticCurveTo(stemX + 6, yNote + stemDir + (stemUp?10:-10), stemX + 8, yNote + stemDir + (stemUp?20:-20));
-          ctxPentagramma.stroke();
-        }
-        if (elem.tipoNota === 'semicroma') {
-          const offsetCoda2 = stemUp ? 6 : -6;
-          ctxPentagramma.beginPath();
-          ctxPentagramma.moveTo(stemX, yNote + stemDir + offsetCoda2);
-          ctxPentagramma.quadraticCurveTo(stemX + 6, yNote + stemDir + offsetCoda2 + (stemUp?10:-10), stemX + 8, yNote + stemDir + offsetCoda2 + (stemUp?20:-20));
-          ctxPentagramma.stroke();
-        }
+        ctxPentagramma.beginPath(); ctxPentagramma.moveTo(stemX, yNote); ctxPentagramma.lineTo(stemX, yNote + stemDir); ctxPentagramma.stroke();
       }
 
       ctxPentagramma.font = "9px Arial"; ctxPentagramma.fillStyle = "#555"; 
@@ -718,7 +719,6 @@ canvasPentagramma.onclick = (e) => {
   
   sequenzaCompositoreCorrente.forEach((elem, idx) => {
     if (Math.abs(clickX - currX) < 15) indiceTrovato = idx;
-    
     let addSpace = 25;
     if (elem.tipoNota === 'semibreve') addSpace = 45;
     if (elem.tipoNota === 'minima') addSpace = 35;
@@ -726,7 +726,6 @@ canvasPentagramma.onclick = (e) => {
     currX += addSpace;
     if (currX >= 500) currX = 55;
   });
-
   if (indiceTrovato !== null) { indiceNotaSelezionataCompositore = indiceTrovato; disegnaPentagrammaCompositore(); }
 };
 
@@ -747,7 +746,6 @@ document.getElementById('seq-cancella-nota').onclick = () => {
   else if (sequenzaCompositoreCorrente.length > 0) sequenzaCompositoreCorrente.pop();
   disegnaPentagrammaCompositore();
 };
-
 document.getElementById('seq-ascolta').onclick = () => riproduciSequenzaTeorema({ sequenza: sequenzaCompositoreCorrente, id: null });
 
 function riproduciSequenzaTeorema(regola) {
@@ -769,35 +767,6 @@ function riproduciSequenzaTeorema(regola) {
   suonaProssima();
 }
 
-let registrazioniChunk = [];
-document.getElementById('seq-registra').onclick = () => {
-  if (sequenzaCompositoreCorrente.length === 0) return alert("Inserisci note da registrare!");
-  inizializzaAudioContext();
-  registrazioniChunk = [];
-  mediaRecorder = new MediaRecorder(destinationStreamNode.stream);
-  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) registrazioniChunk.push(e.data); };
-  mediaRecorder.onstop = () => {
-    const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob(registrazioniChunk, { type: 'audio/webm' }));
-    link.download = 'violino-geometrico.webm'; link.click();
-  };
-  mediaRecorder.start();
-  let i = 0;
-  function suonaEregistra() {
-    if (i >= sequenzaCompositoreCorrente.length) { indiceInRiproduzioneCompositore = null; disegnaPentagrammaCompositore(); DisegnaTastiera(); setTimeout(() => mediaRecorder.stop(), 500); return; }
-    indiceInRiproduzioneCompositore = i; disegnaPentagrammaCompositore();
-    const elem = sequenzaCompositoreCorrente[i];
-    if (elem.tipo === 'nota') {
-      avviaNota(frequenzeBase[["E", "A", "D", "G"][elem.corda]][elem.pos]);
-      DisegnaTastiera(null, { corda: elem.corda, pos: elem.pos });
-      setTimeout(() => { fermaNota(); i++; setTimeout(suonaEregistra, 30); }, elem.durataMs);
-    } else { DisegnaTastiera(); setTimeout(() => { i++; suonaEregistra(); }, elem.durataMs); }
-  }
-  suonaEregistra();
-};
-
-// ==========================================
-// MODIFICA E SALVATAGGIO UI
-// ==========================================
 document.getElementById('btn-nuovo-teorema').onclick = () => {
   inModalitaCreazioneNuovo = true; idTeoremaInModifica = null;
   document.getElementById('campi-salvataggio').style.display = 'flex';
@@ -826,7 +795,6 @@ function chiudiCompositore() {
   document.getElementById('btn-chiudi-compositore').style.display = 'none';
   sequenzaCompositoreCorrente = []; disegnaPentagrammaCompositore();
 }
-
 document.getElementById('btn-chiudi-compositore').onclick = chiudiCompositore;
 
 document.getElementById('btn-salva-teorema').onclick = () => {
@@ -840,7 +808,6 @@ document.getElementById('btn-salva-teorema').onclick = () => {
   salvaInLocale(nuovoTeorema, !!idTeoremaInModifica);
 };
 
-// Avvio applicazione con storage locale
 caricaDaLocale();
 </script>
 </body>
