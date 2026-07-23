@@ -236,33 +236,13 @@ function calcolaDurataEFigura(tempoMs) {
 }
 
 // ==========================================
-// CLASSIFICAZIONE ASSIOMATICA E DEDUZIONE RICORSIVA
+// CLASSIFICAZIONE ASSIOMATICA IN ORDINE CRESCENTE NUMERICO
 // ==========================================
-// Gruppo 1: Definizioni e Postulati
-// Gruppo 2: Teoremi primari e corollari immediati
-// Gruppo 3: Teoremi complessi (con dipendenze logiche calcolate ricorsivamente)
-
 const regoleBaseRaw = [
-  // Gruppo 1
   { num: 1, gruppo: 1, corda: 3, pos: 0, titolo: "1. Definizione di triangolo", enunciato: "Un triangolo è un insieme di punti del piano costituito da una poligonale chiusa di tre lati e dai suoi punti interni.", colore: "#2980b9" },
   { num: 2, gruppo: 1, corda: 3, pos: 1, titolo: "2. Classificazione rispetto ai lati", enunciato: "Un triangolo è equilatero se ha i tre lati congruenti; è isoscele se ha due lati congruenti; scaleno altrimenti.", colore: "#2980b9" },
   { num: 3, gruppo: 1, corda: 3, pos: 2, titolo: "3. Classificazione rispetto agli angoli", enunciato: "Acutangolo (angoli acuti), rettangolo (un retto), ottusangolo (un ottuso).", colore: "#2980b9" },
   { num: 4, gruppo: 1, corda: 3, pos: 3, titolo: "4. Postulato (Primo criterio di congruenza)", enunciato: "Due triangoli con due lati e l'angolo compreso ordinatamente congruenti sono congruenti.", colore: "#2980b9" },
-  { num: 18, gruppo: 1, corda: 1, pos: 0, titolo: "18. Definizione di rette perpendicolari", enunciato: "Due rette incidenti che formano quattro angoli congruenti.", colore: "#2980b9" },
-  { num: 20, gruppo: 1, corda: 2, pos: 6, titolo: "20. Definizione di asse di un segmento", enunciato: "Retta perpendicolare al segmento nel suo punto medio.", colore: "#2980b9" },
-  { num: 21, gruppo: 1, corda: 1, pos: 2, titolo: "21. Definizione di proiezioni e distanza", enunciato: "La proiezione di un punto su una retta è il piede della perpendicolare.", colore: "#2980b9" },
-  { num: 22, gruppo: 1, corda: 1, pos: 3, titolo: "22. Definizione di rette parallele", enunciato: "Due rette che non hanno alcun punto in comune o coincidono.", colore: "#2980b9" },
-  { num: 26, gruppo: 1, corda: 1, pos: 5, titolo: "26. Postulato (Quinto postulato di Euclide)", enunciato: "Per un punto esterno a una retta passa una e una sola parallela.", colore: "#2980b9" },
-  { num: 32, gruppo: 1, corda: 1, pos: 6, titolo: "32. Definizione di angoli con lati paralleli", enunciato: "Semirette concordi se in uno stesso semipiano, discordi altrimenti.", colore: "#2980b9" },
-  { num: 34, gruppo: 1, corda: 0, pos: 0, titolo: "34. Definizione distanza rette parallele", enunciato: "Distanza di un qualsiasi punto di una retta dall'altra.", colore: "#2980b9" },
-  { num: 41, gruppo: 1, corda: 0, pos: 1, titolo: "41. Definizione di parallelogramma", enunciato: "Un quadrilatero con i lati opposti paralleli.", colore: "#2980b9" },
-  { num: 44, gruppo: 1, corda: 0, pos: 2, titolo: "44. Definizione di rettangolo", enunciato: "Parallelogramma avente tutti gli angoli retti.", colore: "#2980b9" },
-  { num: 47, gruppo: 1, corda: 0, pos: 3, titolo: "47. Definizione di rombo", enunciato: "Parallelogramma avente tutti i lati congruenti.", colore: "#2980b9" },
-  { num: 50, gruppo: 1, corda: 0, pos: 4, titolo: "50. Definizione di quadrato", enunciato: "Rettangolo ed anche rombo.", colore: "#2980b9" },
-  { num: 54, gruppo: 1, corda: 0, pos: 5, titolo: "54. Definizione di trapezio", enunciato: "Quadrilatero avente due lati opposti paralleli.", colore: "#2980b9" },
-  { num: 55, gruppo: 1, corda: 0, pos: 6, titolo: "55. Def. trapezio isoscele e rettangolo", enunciato: "Isoscele se ha i lati obliqui congruenti; rettangolo se un lato è perpendicolare alle basi.", colore: "#2980b9" },
-
-  // Gruppo 2
   { num: 5, gruppo: 2, corda: 3, pos: 4, titolo: "5. Teorema (Secondo criterio di congruenza)", enunciato: "Due triangoli con un lato e angoli adiacenti congruenti sono congruenti.", colore: "#2980b9" },
   { num: 6, gruppo: 2, corda: 2, pos: 0, titolo: "6. Teorema del triangolo isoscele", enunciato: "Se è isoscele, ha congruenti gli angoli alla base.", colore: "#2980b9" },
   { num: 7, gruppo: 2, corda: 2, pos: 1, titolo: "7. Teorema inverso del triangolo isoscele", enunciato: "Se ha due angoli congruenti, è isoscele.", colore: "#2980b9" },
@@ -270,29 +250,40 @@ const regoleBaseRaw = [
   { num: 9, gruppo: 2, corda: 2, pos: 3, titolo: "9. Teorema della bisettrice", enunciato: "In un triangolo isoscele la bisettrice al vertice è altezza e mediana.", colore: "#2980b9" },
   { num: 10, gruppo: 2, corda: 2, pos: 4, titolo: "10. Corollario 1 (Triangolo equilatero)", enunciato: "Se è equilatero, è equiangolo.", colore: "#2980b9" },
   { num: 11, gruppo: 2, corda: 2, pos: 5, titolo: "11. Corollario 2 (Equiangolarità)", enunciato: "Se è equiangolo, è equilatero.", colore: "#2980b9" },
+  { num: 12, gruppo: 3, titolo: "12. Teorema (Terzo criterio di congruenza)", enunciato: "Lati omologhi congruenti implicano congruenza.", colore: "#e74c3c", dipendenze: [6, 4] },
   { num: 13, gruppo: 2, corda: 3, pos: 5, titolo: "13. Teorema dell'angolo esterno (maggiore)", enunciato: "L'angolo esterno è maggiore di ogni interno non adiacente.", colore: "#2980b9" },
   { num: 14, gruppo: 2, corda: 3, pos: 6, titolo: "14. Proprietà dedotte dall'angolo esterno", enunciato: "La somma di due angoli interni è minore di un piatto.", colore: "#2980b9" },
+  { num: 18, gruppo: 1, corda: 1, pos: 0, titolo: "18. Definizione di rette perpendicolari", enunciato: "Due rette incidenti che formano quattro angoli congruenti.", colore: "#2980b9" },
   { num: 19, gruppo: 2, corda: 1, pos: 1, titolo: "19. Teorema (Unicità perpendicolare)", enunciato: "Esiste una sola perpendicolare da un punto a una retta.", colore: "#2980b9" },
-  { num: 25, gruppo: 2, corda: 1, pos: 4, titolo: "25. Teorema (Esistenza della parallela)", enunciato: "Dati una retta e un punto, esiste sempre una parallela.", colore: "#2980b9" },
-  { num: 35, gruppo: 2, corda: 2, pos: 12, titolo: "35. Teorema dell'angolo esterno", enunciato: "Un angolo esterno è congruente alla somma dei due interni non adiacenti.", colore: "#2980b9" },
-
-  // Gruppo 3 - Verranno costruiti dinamicamente via algoritmo deduttivo
-  { num: 12, gruppo: 3, titolo: "12. Teorema (Terzo criterio di congruenza)", enunciato: "Lati omologhi congruenti implicano congruenza.", colore: "#e74c3c", dipendenze: [6, 4] },
+  { num: 20, gruppo: 1, corda: 2, pos: 6, titolo: "20. Definizione di asse di un segmento", enunciato: "Retta perpendicolare al segmento nel suo punto medio.", colore: "#2980b9" },
+  { num: 21, gruppo: 1, corda: 1, pos: 2, titolo: "21. Definizione di proiezioni e distanza", enunciato: "La proiezione di un punto su una retta è il piede della perpendicolare.", colore: "#2980b9" },
+  { num: 22, gruppo: 1, corda: 1, pos: 3, titolo: "22. Definizione di rette parallele", enunciato: "Due rette che non hanno alcun punto in comune o coincidono.", colore: "#2980b9" },
   { num: 23, gruppo: 3, titolo: "23. Teorema (Criterio di parallelismo)", enunciato: "Angoli alterni congruenti implicano rette parallele.", colore: "#e67e22", dipendenze: [22, 13] },
   { num: 24, gruppo: 3, titolo: "24. Corollario (Parallelismo per perpendicolarità)", enunciato: "Rette perpendicolari alla stessa retta sono parallele.", colore: "#f1c40f", dipendenze: [18, 23] },
+  { num: 25, gruppo: 2, corda: 1, pos: 4, titolo: "25. Teorema (Esistenza della parallela)", enunciato: "Dati una retta e un punto, esiste sempre una parallela.", colore: "#2980b9" },
+  { num: 26, gruppo: 1, corda: 1, pos: 5, titolo: "26. Postulato (Quinto postulato di Euclide)", enunciato: "Per un punto esterno a una retta passa una e una sola parallela.", colore: "#2980b9" },
   { num: 27, gruppo: 3, titolo: "27. Teorema (Inverso del criterio di parallelismo)", enunciato: "Rette parallele formano angoli alterni congruenti.", colore: "#2ecc71", dipendenze: [23, 26] },
   { num: 31, gruppo: 3, titolo: "31. Teorema (Cond. nec. e suff. del parallelismo)", enunciato: "Condizione biunivoca del parallelismo geometrico.", colore: "#1abc9c", dipendenze: [23, 27] },
+  { num: 32, gruppo: 1, corda: 1, pos: 6, titolo: "32. Definizione di angoli con lati paralleli", enunciato: "Semirette concordi se in uno stesso semipiano, discordi altrimenti.", colore: "#2980b9" },
+  { num: 34, gruppo: 1, corda: 0, pos: 0, titolo: "34. Definizione distanza rette parallele", enunciato: "Distanza di un qualsiasi punto di una retta dall'altra.", colore: "#2980b9" },
+  { num: 35, gruppo: 2, corda: 2, pos: 12, titolo: "35. Teorema dell'angolo esterno", enunciato: "Un angolo esterno è congruente alla somma dei due interni non adiacenti.", colore: "#2980b9" },
   { num: 36, gruppo: 3, titolo: "36. Teorema (Somma angoli interni)", enunciato: "La somma degli angoli interni di un triangolo è un piatto.", colore: "#9b59b6", dipendenze: [35] },
   { num: 39, gruppo: 3, titolo: "39. Teoremi (Criteri triangoli rettangoli)", enunciato: "Condizioni di congruenza basate su ipotenusa/cateti.", colore: "#34495e", dipendenze: [4, 5, 36, 6] },
+  { num: 41, gruppo: 1, corda: 0, pos: 1, titolo: "41. Definizione di parallelogramma", enunciato: "Un quadrilatero con i lati opposti paralleli.", colore: "#2980b9" },
   { num: 42, gruppo: 3, titolo: "42. Teorema (Proprietà dei parallelogrammi)", enunciato: "Lati e angoli opposti congruenti, diagonali bisecate.", colore: "#e74c3c", dipendenze: [41, 27, 5] },
   { num: 43, gruppo: 3, titolo: "43. Teorema (Criteri del parallelogramma)", enunciato: "Condizioni per definire un parallelogramma convesso.", colore: "#e67e22", dipendenze: [12, 5, 23, 41] },
+  { num: 44, gruppo: 1, corda: 0, pos: 2, titolo: "44. Definizione di rettangolo", enunciato: "Parallelogramma avente tutti gli angoli retti.", colore: "#2980b9" },
   { num: 45, gruppo: 3, titolo: "45. Teorema (Diagonali del rettangolo)", enunciato: "Ogni rettangolo ha le diagonali congruenti.", colore: "#f1c40f", dipendenze: [44, 42, 4] },
   { num: 46, gruppo: 3, titolo: "46. Teorema (Condizione per il rettangolo)", enunciato: "Parallelogramma con diagonali congruenti è rettangolo.", colore: "#2ecc71", dipendenze: [12, 27, 18, 44] },
+  { num: 47, gruppo: 1, corda: 0, pos: 3, titolo: "47. Definizione di rombo", enunciato: "Parallelogramma avente tutti i lati congruenti.", colore: "#2980b9" },
   { num: 48, gruppo: 3, titolo: "48. Teorema (Diagonali del rombo)", enunciato: "Diagonali perpendicolari e bisettrici degli angoli.", colore: "#1abc9c", dipendenze: [47, 42, 9] },
   { num: 49, gruppo: 3, titolo: "49. Teorema (Condizioni per il rombo)", enunciato: "Parallelogramma con diag. perpendicolari è rombo.", colore: "#9b59b6", dipendenze: [42, 9, 4, 47] },
+  { num: 50, gruppo: 1, corda: 0, pos: 4, titolo: "50. Definizione di quadrato", enunciato: "Rettangolo ed anche rombo.", colore: "#2980b9" },
   { num: 51, gruppo: 3, titolo: "51. Teorema (Diagonali del quadrato)", enunciato: "Diagonali congruenti, perpendicolari e bisettrici.", colore: "#34495e", dipendenze: [50, 45, 48] },
   { num: 52, gruppo: 3, titolo: "52. Corollario (Scomposizione del quadrato)", enunciato: "Diagonali definiscono triangoli rettangoli isosceli.", colore: "#e74c3c", dipendenze: [50, 12] },
   { num: 53, gruppo: 3, titolo: "53. Teorema (Condizioni per il quadrato)", enunciato: "Diag. congruenti e perpendicolari definiscono quadrato.", colore: "#e67e22", dipendenze: [46, 49, 50] },
+  { num: 54, gruppo: 1, corda: 0, pos: 5, titolo: "54. Definizione di trapezio", enunciato: "Quadrilatero avente due lati opposti paralleli.", colore: "#2980b9" },
+  { num: 55, gruppo: 1, corda: 0, pos: 6, titolo: "55. Def. trapezio isoscele e rettangolo", enunciato: "Isoscele se ha i lati obliqui congruenti; rettangolo se un lato è perpendicolare alle basi.", colore: "#2980b9" },
   { num: 56, gruppo: 3, titolo: "56. Teorema del trapezio isoscele", enunciato: "Angoli alla base congruenti nel trapezio isoscele.", colore: "#f1c40f", dipendenze: [54, 42, 39] },
   { num: 57, gruppo: 3, titolo: "57. Corollario (Angoli opposti trapezio)", enunciato: "Angoli opposti supplementari nel trapezio isoscele.", colore: "#2ecc71", dipendenze: [27, 56] },
   { num: 58, gruppo: 3, titolo: "58. Teorema inverso trapezio isoscele", enunciato: "Angoli base congruenti implicano trapezio isoscele.", colore: "#1abc9c", dipendenze: [39] },
@@ -317,7 +308,9 @@ function costruisciSinfonieLogiche() {
     if (regola.gruppo === 3 && regola.dipendenze) {
       regola.sequenza = [];
       regola.dipendenze.forEach(dip => {
-        regola.sequenza = regola.sequenza.concat(getNoteBase(dip));
+        // Applica forzatamente la durata breve ('semicroma', 250ms) a tutte le note delle sinfonie dei teoremi complessi
+        const notes = getNoteBase(dip).map(n => ({...n, tipoNota: 'semicroma', durataMs: 250}));
+        regola.sequenza = regola.sequenza.concat(notes);
       });
     }
   });
@@ -334,7 +327,7 @@ let regoleGeometria = [...regoleBase];
 // ==========================================
 function caricaDaLocale() {
   try {
-    const salvati = localStorage.getItem('violino_geometrico_teoremi_2');
+    const salvati = localStorage.getItem('violino_geometrico_teoremi_3');
     if (salvati) teoremiCustom = JSON.parse(salvati);
     else teoremiCustom = [];
   } catch(e) {
@@ -355,7 +348,7 @@ function salvaInLocale(teorema, isUpdate = false) {
     teoremiCustom.push(teorema);
   }
   try {
-    localStorage.setItem('violino_geometrico_teoremi_2', JSON.stringify(teoremiCustom));
+    localStorage.setItem('violino_geometrico_teoremi_3', JSON.stringify(teoremiCustom));
     chiudiCompositore();
     caricaDaLocale();
   } catch(e) {
@@ -365,7 +358,7 @@ function salvaInLocale(teorema, isUpdate = false) {
 
 function eliminaDaLocale(id) {
   teoremiCustom = teoremiCustom.filter(t => t.id !== id);
-  localStorage.setItem('violino_geometrico_teoremi_2', JSON.stringify(teoremiCustom));
+  localStorage.setItem('violino_geometrico_teoremi_3', JSON.stringify(teoremiCustom));
   caricaDaLocale();
 }
 
@@ -493,9 +486,6 @@ function popolaLista() {
     });
   });
 }
-
-// Funzioni per canvas, tastiera e sequenziatore omesse integralmente (identiche allo snippet del messaggio precedente) 
-// in quanto non impattate dalla revisione architetturale logico/musicale che è il fulcro di questo iter.
 
 function getCoordNodo(corda, pos) {
   const xStart = 80, xEnd = 900, yStart = 40, yEnd = 200;
@@ -688,6 +678,20 @@ function disegnaPentagrammaCompositore() {
         const stemDir = stemUp ? -22 : 22;
         
         ctxPentagramma.beginPath(); ctxPentagramma.moveTo(stemX, yNote); ctxPentagramma.lineTo(stemX, yNote + stemDir); ctxPentagramma.stroke();
+
+        if (elem.tipoNota === 'croma' || elem.tipoNota === 'semicroma') {
+          ctxPentagramma.beginPath();
+          ctxPentagramma.moveTo(stemX, yNote + stemDir);
+          ctxPentagramma.quadraticCurveTo(stemX + 6, yNote + stemDir + (stemUp?10:-10), stemX + 8, yNote + stemDir + (stemUp?20:-20));
+          ctxPentagramma.stroke();
+        }
+        if (elem.tipoNota === 'semicroma') {
+          const offsetCoda2 = stemUp ? 6 : -6;
+          ctxPentagramma.beginPath();
+          ctxPentagramma.moveTo(stemX, yNote + stemDir + offsetCoda2);
+          ctxPentagramma.quadraticCurveTo(stemX + 6, yNote + stemDir + offsetCoda2 + (stemUp?10:-10), stemX + 8, yNote + stemDir + offsetCoda2 + (stemUp?20:-20));
+          ctxPentagramma.stroke();
+        }
       }
 
       ctxPentagramma.font = "9px Arial"; ctxPentagramma.fillStyle = "#555"; 
